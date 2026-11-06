@@ -143,8 +143,6 @@ CuidadoYVirtudAPP/
 ## Documentos del equipo
 
 - [Declaración de transparencia](docs/entregables/1_DECLARACION_DE_TRANSPARENCIA.md)
-- [Guion del pitch (5 minutos)](docs/entregables/2_GUION_PITCH_5_MINUTOS.md)
-- [Preguntas críticas del jurado](docs/entregables/3_PREGUNTAS_DEL_JURADO.md)
 - [Registro de decisiones y arquitectura (`CLAUDE.md`)](CLAUDE.md)
 
 ## Próximos pasos
