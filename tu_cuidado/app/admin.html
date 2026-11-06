@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Cuidado - Administración</title>
+  <script src="/static/tailwind.js"></script>
+  <style> body { font-family:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif; background:#F4F8FB; color:#0F3D6E; } </style>
+</head>
+<body class="min-h-screen p-8 max-w-5xl mx-auto">
+  <header class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3"><img src="/static/logo.webp" class="h-12" alt="Logo"><div><h1 class="text-2xl font-black">Gestión</h1><p class="text-sm font-semibold text-[#3B8DBF]">Administrador/a · seguridad máxima</p></div></div>
+    <a href="/" class="text-sm font-bold text-[#3B8DBF] underline">Cerrar sesión</a>
+  </header>
+
+  <div class="bg-[#E3EEF7] border border-[#3B8DBF]/40 rounded-2xl p-4 mb-6 flex items-center gap-3"><span class="text-2xl">🔐</span>
+    <p class="text-sm font-semibold">El Administrador gestiona accesos y dispositivos, pero <strong>no ve respuestas de salud ni alertas personales</strong> de las personas mayores.</p></div>
+
+  <div class="grid md:grid-cols-3 gap-5 mb-6">
+    <div class="md:col-span-2 bg-white rounded-2xl border border-[#6FA0C8]/30 overflow-hidden">
+      <div class="p-4 font-black border-b border-slate-100 flex justify-between"><span>Personas registradas</span><span id="n" class="text-[#3B8DBF]"></span></div>
+      <div class="max-h-[460px] overflow-y-auto"><table class="w-full text-sm"><thead class="bg-[#F4F8FB] text-left text-xs uppercase sticky top-0"><tr><th class="p-3">ID seudónimo</th><th class="p-3">Tramo</th><th class="p-3">Zona</th><th class="p-3">Consentimiento</th></tr></thead><tbody id="filas"></tbody></table></div>
+    </div>
+    <div class="space-y-5">
+      <div class="bg-white rounded-2xl border border-[#6FA0C8]/30 p-5 text-center"><h2 class="font-black mb-2">Enrolar dispositivo</h2>
+        <div id="qr" class="mx-auto w-36 h-36 rounded-xl border-4 border-[#0F3D6E] grid grid-cols-9 gap-[2px] p-1 mb-2"></div>
+        <p class="text-2xl font-black tracking-widest" id="codigo">——</p><p class="text-xs font-semibold text-[#0F3D6E]/70 mb-3">Código de un solo uso (simulado)</p>
+        <button id="gen" class="w-full py-2.5 rounded-xl bg-[#0F3D6E] text-white font-bold text-sm">Generar código</button>
+        <p class="text-xs mt-2 font-semibold text-[#3B8DBF]">La persona mayor no necesitará ingresar contraseña.</p></div>
+      <div class="bg-white rounded-2xl border border-[#6FA0C8]/30 p-5"><h2 class="font-black mb-2">Asignación</h2><p class="text-sm">Cada persona se asigna a un/a funcionario/a. Cada funcionario/a solo ve a quienes tiene asignadas.</p><p class="text-xs mt-2 text-[#0F3D6E]/70">(Simulado en este prototipo: un solo funcionario.)</p></div>
+    </div>
+  </div>
+<script>
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+fetch('/api/personas').then(r => r.json()).then(ps => {
+  $n = document.getElementById('n'); $n.textContent = ps.length + ' personas';
+  document.getElementById('filas').innerHTML = ps.map(p => `<tr class="border-t border-slate-100"><td class="p-3 font-bold">${esc(p.persona_id)}</td><td class="p-3">${esc(p.tramo_etario)}</td><td class="p-3">${esc(p.zona)}</td><td class="p-3"><span class="px-2 py-0.5 rounded-full text-xs font-black ${p.consentimiento === 'vigente' ? 'bg-[#E8F5E9] text-[#2E7D32]' : 'bg-[#FFF8E1] text-[#B78103]'}">${p.consentimiento === 'vigente' ? '✔ Vigente' : '⏸ Pausado'}</span></td></tr>`).join('');
+});
+function qr() { const q = document.getElementById('qr'); q.innerHTML = Array.from({length: 81}, () => `<div class="${Math.random() < .5 ? 'bg-[#0F3D6E]' : 'bg-white'}"></div>`).join(''); }
+document.getElementById('gen').onclick = () => { document.getElementById('codigo').textContent = String(Math.floor(100000 + Math.random() * 900000)).replace(/(\d{3})(\d{3})/, '$1 $2'); qr(); };
+qr();
+</script>
+</body>
+</html>

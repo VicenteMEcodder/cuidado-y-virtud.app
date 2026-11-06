@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Cuidado - Qué quiere compartir</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Nunito', 'Plus Jakarta Sans', sans-serif;
+      background-color: #F4F8FC;
+      color: #0F3D6E;
+      user-select: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen h-screen flex flex-col justify-between p-6 overflow-hidden">
+
+  <!-- Header -->
+  <header class="flex items-center justify-between pt-2">
+    <div class="flex items-center gap-3">
+      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFVb5Haoy_x_vn5NDO8sGWRN1-m5XczYRkRuf88Vq0cAiP0376EDl5t3bUn6q0xShwBakQmxB3OSIOs7mlWf0kFatT2mdo03dvZ3J5xw15s9ntdYnGNpmKmBNg07Lij6X-S7r_gV9DxqXpsyy93x4q_2GYndHX6dfqe6vXhPyc-vpYLJBGwGCMzd1aCBOpeIljwQ8FUEo89SQtbD7NP9S3UhjkJDU4uNg240EdfHE2v3tAjjDW5FMjjw" alt="Tu Cuidado" class="h-12 w-auto object-contain">
+      <span class="text-xl font-black text-[#0F3D6E]">Tu Cuidado</span>
+    </div>
+    <span class="px-3 py-1 rounded-full bg-[#E3EEF7] text-[#0F3D6E] font-bold text-sm">
+      Sus decisiones
+    </span>
+  </header>
+
+  <!-- Pregunta Central -->
+  <main class="flex flex-col items-center my-auto w-full max-w-sm mx-auto">
+    <h1 class="text-[34px] font-black text-[#0F3D6E] leading-tight text-center mb-2">
+      ¿Qué quiere compartir?
+    </h1>
+    <p class="text-xl font-semibold text-[#3B8DBF] text-center mb-6">
+      Usted tiene el control total en todo momento.
+    </p>
+
+    <!-- 3 Interruptores grandes con ícono y frase simple -->
+    <div class="w-full flex flex-col gap-4">
+      
+      <!-- Opción 1 -->
+      <label class="flex items-center justify-between p-4 bg-white rounded-2xl border-2 border-[#3B8DBF]/30 shadow-sm cursor-pointer active:bg-blue-50 transition-colors">
+        <div class="flex items-center gap-3.5 pr-2">
+          <div class="w-12 h-12 rounded-xl bg-[#E3EEF7] flex items-center justify-center text-2xl flex-shrink-0">
+            🤝
+          </div>
+          <span class="text-xl font-extrabold text-[#0F3D6E] leading-snug">
+            Que mi cuidador vea cómo estoy
+          </span>
+        </div>
+        <input type="checkbox" checked class="w-8 h-8 rounded-lg accent-[#0F3D6E] cursor-pointer flex-shrink-0">
+      </label>
+
+      <!-- Opción 2 -->
+      <label class="flex items-center justify-between p-4 bg-white rounded-2xl border-2 border-[#3B8DBF]/30 shadow-sm cursor-pointer active:bg-blue-50 transition-colors">
+        <div class="flex items-center gap-3.5 pr-2">
+          <div class="w-12 h-12 rounded-xl bg-[#E3EEF7] flex items-center justify-center text-2xl flex-shrink-0">
+            👨‍👩‍👧
+          </div>
+          <span class="text-xl font-extrabold text-[#0F3D6E] leading-snug">
+            Que avisen a mi familia si lo necesito
+          </span>
+        </div>
+        <input type="checkbox" checked class="w-8 h-8 rounded-lg accent-[#0F3D6E] cursor-pointer flex-shrink-0">
+      </label>
+
+      <!-- Opción 3 -->
+      <label class="flex items-center justify-between p-4 bg-white rounded-2xl border-2 border-amber-200 shadow-sm cursor-pointer active:bg-amber-50 transition-colors">
+        <div class="flex items-center gap-3.5 pr-2">
+          <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-2xl flex-shrink-0">
+            ⏸️
+          </div>
+          <span class="text-xl font-extrabold text-[#0F3D6E] leading-snug">
+            Pausar el acompañamiento por hoy
+          </span>
+        </div>
+        <input type="checkbox" class="w-8 h-8 rounded-lg accent-[#E6A100] cursor-pointer flex-shrink-0">
+      </label>
+
+    </div>
+  </main>
+
+  <!-- Botón Listo -->
+  <footer class="pt-2 pb-1">
+    <button class="w-full py-5 rounded-2xl bg-[#0F3D6E] text-white text-[28px] font-black shadow-lg shadow-[#0F3D6E]/20 active:scale-[0.98] transition-transform">
+      Listo
+    </button>
+  </footer>
+
+</body>
+</html>

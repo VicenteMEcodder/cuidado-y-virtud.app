@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Cuidado - ¿Qué quiere compartir?</title>
+  <script src="/static/tailwind.js"></script>
+  <style> body { font-family:'Nunito','Plus Jakarta Sans','Segoe UI',system-ui,sans-serif; background:#F4F8FC; color:#0F3D6E; user-select:none; }
+    .sw { width:84px; height:48px; border-radius:999px; background:#cbd5e1; position:relative; transition:.2s; flex-shrink:0; }
+    .sw::after { content:''; position:absolute; top:4px; left:4px; width:40px; height:40px; border-radius:50%; background:#fff; transition:.2s; box-shadow:0 2px 6px rgba(0,0,0,.25); }
+    .sw.on { background:#2E7D32; } .sw.on::after { left:40px; } </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-6 max-w-md mx-auto">
+  <header class="flex items-center gap-3 pt-2"><img src="/static/logo.webp" class="h-12" alt="Logo"><span class="text-xl font-black">Tu Cuidado</span></header>
+  <main class="my-auto">
+    <h1 class="text-[36px] font-black leading-tight mb-2">¿Qué quiere compartir?</h1>
+    <p class="text-[22px] font-semibold text-[#3B8DBF] mb-6">Usted decide. Puede cambiarlo cuando quiera.</p>
+    <div class="space-y-4" id="lista"></div>
+  </main>
+  <footer class="pb-1"><button id="listo" class="w-full py-5 rounded-2xl bg-[#2E7D32] text-white text-[30px] font-black shadow-lg">Listo</button>
+    <p id="ok" class="text-center text-xl font-bold text-[#2E7D32] mt-2 min-h-[28px]"></p></footer>
+<script>
+const $ = id => document.getElementById(id);
+const OPS = [['comparte_con_cuidador','Que mi cuidador vea cómo estoy','🧑‍⚕️'], ['avisar_familia','Que avisen a mi familia si lo necesito','👨‍👩‍👧'], ['pausado','Pausar el acompañamiento por hoy','⏸️']];
+let pid, estado = {};
+(async () => {
+  const p = await (await fetch('/api/demo/persona' + (location.search.includes('p=') ? location.search : ''))).json(); pid = p.persona_id;
+  estado = await (await fetch('/api/consentimiento/' + pid)).json();
+  $('lista').innerHTML = OPS.map(([k, t, e]) => `<button data-k="${k}" class="w-full bg-white rounded-3xl border-2 border-[#6FA0C8]/40 p-5 flex items-center gap-4 text-left shadow-sm active:scale-[0.98]"><span class="text-4xl">${e}</span><span class="flex-1 text-[24px] font-extrabold leading-tight">${t}</span><span class="sw ${estado[k] ? 'on' : ''}"></span></button>`).join('');
+  document.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; estado[k] = !estado[k]; b.querySelector('.sw').classList.toggle('on', estado[k]); });
+})();
+$('listo').onclick = async () => {
+  await fetch('/api/consentimiento', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ persona_id: pid, ...estado }) });
+  $('ok').textContent = '✔ Guardado. Gracias por contarnos.'; setTimeout(() => location.href = '/mayor', 1400);
+};
+</script>
+</body>
+</html>

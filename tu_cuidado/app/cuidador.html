@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Cuidado - Panel del Cuidador</title>
+  <script src="/static/tailwind.js"></script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif; background:#F4F8FB; color:#0F3D6E; }
+    .nav-on { background:#0F3D6E; color:#fff; box-shadow:0 6px 14px rgba(15,61,110,.15); }
+    .accion { transition:all .12s; } .accion.sel { outline:3px solid #0F3D6E; outline-offset:2px; background:#E3EEF7; }
+    .slide { animation: slide .25s ease; } @keyframes slide { from {transform:translateX(30px);opacity:0;} to {transform:none;opacity:1;} }
+  </style>
+</head>
+<body class="min-h-screen flex">
+
+  <aside class="w-64 bg-white border-r border-[#6FA0C8]/25 flex flex-col justify-between p-5 flex-shrink-0 h-screen sticky top-0">
+    <div>
+      <div class="flex items-center gap-3 px-2 py-3 mb-6">
+        <img src="/static/logo.webp" alt="Logo" class="h-12 w-auto">
+        <div><span class="text-lg font-black block leading-tight">Tu Cuidado</span><span class="text-xs font-semibold text-[#3B8DBF]">Oficina Adulto Mayor</span></div>
+      </div>
+      <nav class="space-y-2" id="nav">
+        <a data-v="alertas" class="nav flex items-center gap-3 px-4 py-3 rounded-2xl font-bold cursor-pointer">🔔 <span>Alertas del día</span><span id="badge" class="ml-auto px-2 py-0.5 rounded-full bg-[#E85D04] text-white text-xs font-black">0</span></a>
+        <a data-v="personas" class="nav flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold cursor-pointer hover:bg-[#E3EEF7]">👥 <span>Mis personas</span></a>
+        <a data-v="historial" class="nav flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold cursor-pointer hover:bg-[#E3EEF7]">🕘 <span>Historial</span></a>
+        <a data-v="equidad" class="nav flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold cursor-pointer hover:bg-[#E3EEF7]">⚖️ <span>Equidad y transparencia</span></a>
+      </nav>
+    </div>
+    <div>
+      <a href="/" class="block text-xs font-semibold text-[#3B8DBF] underline mb-3 px-2">Cambiar de perfil</a>
+      <div class="p-3 bg-[#F4F8FB] rounded-2xl border border-[#6FA0C8]/30 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-[#0F3D6E] text-white flex items-center justify-center font-bold text-sm">CV</div>
+        <div class="overflow-hidden"><p class="text-sm font-bold truncate">Camila Valenzuela</p><p class="text-xs text-[#3B8DBF]">Cuidadora territorial</p></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-8 overflow-y-auto h-screen">
+    <!-- Vista: alertas -->
+    <section id="v-alertas">
+      <div class="flex items-center justify-between mb-6">
+        <div><h1 class="text-2xl font-black">Cola de alertas del día</h1>
+          <p class="text-base text-[#3B8DBF] font-medium mt-1">Acompañamiento preventivo comunitario · datos 100 % sintéticos</p></div>
+        <span id="fecha" class="px-4 py-2 bg-white rounded-xl border border-[#6FA0C8]/30 font-bold text-sm"></span>
+      </div>
+      <div class="grid grid-cols-3 gap-5 mb-4" id="contadores"></div>
+      <p id="aviso" class="text-xs font-semibold text-[#0F3D6E]/70 mb-6"></p>
+      <h2 class="text-lg font-bold mb-4">Casos priorizados para revisión</h2>
+      <div id="lista" class="space-y-4"></div>
+    </section>
+
+    <section id="v-personas" class="hidden"><h1 class="text-2xl font-black mb-1">Mis personas</h1>
+      <p class="text-[#3B8DBF] font-medium mb-5">Solo aparecen quienes aceptaron compartir su estado con usted.</p>
+      <div id="tabla-personas" class="bg-white rounded-2xl border border-[#6FA0C8]/30 overflow-hidden"></div></section>
+
+    <section id="v-historial" class="hidden"><h1 class="text-2xl font-black mb-1">Historial y bitácora</h1>
+      <p class="text-[#3B8DBF] font-medium mb-5">Quién vio y decidió qué, y cuándo. Incluye cada envío que el sistema intentó y fue bloqueado.</p>
+      <div id="bitacora" class="bg-white rounded-2xl border border-[#6FA0C8]/30 p-5 space-y-3"></div></section>
+
+    <section id="v-equidad" class="hidden"><h1 class="text-2xl font-black mb-1">Equidad y transparencia</h1>
+      <p id="eq-nota" class="text-[#3B8DBF] font-medium mb-5"></p><div id="eq" class="space-y-6"></div></section>
+  </main>
+
+  <!-- Panel lateral: revisar caso -->
+  <div id="velo" class="hidden fixed inset-0 bg-[#0F3D6E]/30 z-40"></div>
+  <aside id="panel" class="hidden slide fixed right-0 top-0 w-[640px] max-w-full bg-white border-l border-[#6FA0C8]/30 shadow-2xl h-screen overflow-y-auto z-50"></aside>
+
+<script>
+const $ = id => document.getElementById(id);
+const COL = { 'Revisar': { c:'#C62828', bg:'#FFEBEE', t:'#C62828', ic:'⚠️' }, 'Observar': { c:'#E6A100', bg:'#FFF8E1', t:'#B78103', ic:'👁️' }, 'Sin novedad': { c:'#2E7D32', bg:'#E8F5E9', t:'#2E7D32', ic:'✅' } };
+const ETIQ = { descartar:'✕ Descartar', esperar:'⏳ Esperar y reevaluar', llamar:'📞 Llamar primero a la persona', visita:'🚶 Visita presencial', derivar:'🤝 Derivar a red de apoyo (CESFAM / Vínculos)' };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let vista = 'alertas', accionSel = null;
+
+function spark(vals, color) {
+  const v = vals.map(x => x ?? null); const num = v.filter(x => x !== null);
+  if (num.length < 2) return '';
+  const w = 120, h = 30, pts = v.map((x, i) => x === null ? null : [i * w / (v.length - 1), h - 2 - x * (h - 4)]).filter(Boolean);
+  const u = pts[pts.length - 1];
+  return `<svg class="w-32 h-9 overflow-visible" viewBox="0 0 120 30"><polyline fill="none" stroke="#6FA0C8" stroke-width="2" points="${pts.map(p => p.join(',')).join(' ')}"/><circle cx="${u[0]}" cy="${u[1]}" r="3.5" fill="${color}"/></svg>`;
+}
+function chip(n) { const k = COL[n]; return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border" style="background:${k.bg};color:${k.t};border-color:${k.c}66"><span>${k.ic}</span> ${n}</span>`; }
+
+async function cargarAlertas() {
+  const d = await (await fetch('/api/alertas')).json();
+  $('fecha').textContent = '📅 ' + new Date(d.fecha + 'T12:00').toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
+  $('badge').textContent = d.contadores['Revisar'] + d.contadores['Observar'];
+  const tarjetas = [['Revisar','casos','Requieren atención prioritaria hoy','M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'],
+                    ['Observar','casos','Desviación leve de la rutina','M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'],
+                    ['Sin novedad','personas','Sin cambios respecto de su rutina','M5 13l4 4L19 7']];
+  $('contadores').innerHTML = tarjetas.map(([n, u, sub, path]) => { const k = COL[n];
+    return `<div class="bg-white border-2 rounded-2xl p-5 shadow-sm flex items-center justify-between" style="border-color:${k.c}"><div>
+      <div class="flex items-center gap-2 font-black text-sm uppercase tracking-wide" style="color:${k.t}"><span class="text-xl">${k.ic}</span><span>${n}</span></div>
+      <p class="text-3xl font-black mt-2" style="color:${k.t}">${d.contadores[n]} ${u}</p><p class="text-xs text-[#0F3D6E]/70 mt-1">${sub}</p></div>
+      <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:${k.bg};color:${k.t}"><svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="${path}"/></svg></div></div>`; }).join('');
+  $('aviso').textContent = d.no_visibles ? `🔒 ${d.no_visibles} personas no aparecen aquí porque pausaron el acompañamiento o no autorizaron compartir su estado. Se respeta su decisión.` : '';
+  $('lista').innerHTML = d.alertas.length ? d.alertas.map(a => { const k = COL[a.nivel]; const p = a.persona;
+    return `<div class="bg-white rounded-2xl border-2 p-5 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow" style="border-color:${k.c}">
+      <div class="flex items-start gap-4 flex-1 pr-6"><div class="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg flex-shrink-0" style="background:${k.bg};color:${k.t}">${esc(p.iniciales)}</div>
+      <div><div class="flex items-center gap-3 flex-wrap"><span class="text-lg font-black">${esc(p.alias)}</span><span class="text-sm font-semibold text-[#0F3D6E]/60">(${esc(p.tramo_etario)} años · ${esc(p.zona)})</span>${chip(a.nivel)}
+        ${a.estado === 'EN_ESPERA' ? '<span class="px-2 py-0.5 rounded-full bg-[#E3EEF7] text-xs font-bold">⏳ En espera</span>' : ''}${a.origen === 'sos' ? '<span class="px-2 py-0.5 rounded-full bg-[#FFF3E0] text-[#E85D04] text-xs font-black">🆘 Pidió ayuda</span>' : ''}</div>
+        <p class="text-base mt-1.5 font-medium">${esc(a.explicacion)}</p>
+        <div class="flex items-center gap-4 mt-2 text-xs font-semibold text-[#3B8DBF]"><span>Consentimiento: ${a.consentimiento.vigente ? 'Vigente' : 'Pausado'}</span><span>•</span><span>${a.consentimiento.avisar_familia ? 'Autoriza avisar a su familia' : 'No autorizó avisar a su familia'}</span></div></div></div>
+      <div class="flex items-center gap-6 flex-shrink-0"><div class="flex flex-col items-end"><span class="text-xs font-bold text-[#0F3D6E]/70 mb-1">Tendencia 30 días</span>${spark(a.spark, k.c)}</div>
+      <button onclick="abrir(${a.id})" class="px-5 py-3 rounded-xl text-white font-bold text-sm shadow-md flex items-center gap-2" style="background:${a.origen === 'sos' ? '#E85D04' : '#0F3D6E'}">Revisar caso ›</button></div></div>`; }).join('')
+    : '<div class="bg-white rounded-2xl p-8 text-center font-semibold text-[#3B8DBF]">No quedan casos por revisar. 🌱</div>';
+}
+
+async function abrir(id) {
+  const a = await (await fetch('/api/alertas/' + id)).json(); accionSel = null; const k = COL[a.nivel]; const p = a.persona;
+  const norm = a.grafico.base, serie = a.grafico.serie.map(x => x ?? norm);
+  const W = 500, H = 100, ys = v => H - 5 - v * (H - 10);
+  const linea = serie.map((v, i) => `${i * W / (serie.length - 1)},${ys(v)}`).join(' ');
+  const ult = serie[serie.length - 1];
+  $('panel').innerHTML = `
+  <div class="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10"><div>
+    <div class="flex items-center gap-3"><h2 class="text-2xl font-black">${esc(p.alias)}</h2>${chip(a.nivel)}</div>
+    <p class="text-sm font-semibold text-[#3B8DBF] mt-0.5">${esc(p.tramo_etario)} años · zona ${esc(p.zona)} · ${esc(p.persona_id)}</p></div>
+    <button onclick="cerrar()" class="p-2 rounded-xl text-slate-400 hover:bg-slate-100 text-xl">✕</button></div>
+  <div class="p-6 space-y-6">
+    <div class="bg-[#E3EEF7] border border-[#3B8DBF]/40 rounded-2xl p-4 flex items-center gap-3"><div class="w-9 h-9 rounded-xl bg-[#0F3D6E] text-white flex items-center justify-center flex-shrink-0">⚖️</div>
+      <div><p class="text-sm font-black">La IA sugiere, usted decide</p><p class="text-xs text-[#0F3D6E]/80">Nunca se ejecutan llamadas ni derivaciones automáticas. Su criterio profesional es irremplazable.</p></div></div>
+    <div class="bg-white border border-[#6FA0C8]/30 rounded-2xl p-5 shadow-sm"><h3 class="text-base font-black mb-3">🔍 Señales que motivaron la alerta</h3><ul class="space-y-2 text-sm">
+      ${a.senales.map(s => `<li class="flex items-start gap-2.5"><span class="font-bold mt-0.5" style="color:${s.fuerza === 'fuerte' ? '#C62828' : s.fuerza === 'moderada' ? '#E6A100' : '#3B8DBF'}">•</span><span><strong>${esc(s.titulo)}:</strong> ${esc(s.texto)}</span></li>`).join('') || '<li>Sin señales.</li>'}
+      <li class="flex items-start gap-2.5"><span class="text-[#3B8DBF] font-bold mt-0.5">•</span><span><strong>Respaldo de privacidad:</strong> No se graban audios ni transcripciones; solo respuestas codificadas (bien/regular/mal, sí/no).</span></li></ul></div>
+    <div class="bg-white border border-[#6FA0C8]/30 rounded-2xl p-5 shadow-sm"><div class="flex items-center justify-between mb-3"><h3 class="text-base font-black">${esc(a.grafico.titulo)}: su rutina habitual vs. últimos 30 días</h3>
+      <div class="flex items-center gap-4 text-xs font-bold"><span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#6FA0C8]"></span> Su normalidad</span><span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background:${k.c}"></span> Últimos días</span></div></div>
+      <div class="bg-[#F8FAFC] rounded-xl p-3"><svg class="w-full h-32" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><line x1="0" x2="${W}" y1="${ys(norm)}" y2="${ys(norm)}" stroke="#6FA0C8" stroke-width="2.5" stroke-dasharray="6,4"/><polyline fill="none" stroke="${k.c}" stroke-width="3.5" points="${linea}"/><circle cx="${W}" cy="${ys(ult)}" r="5" fill="${k.c}"/></svg>
+      <div class="flex justify-between text-[11px] font-bold text-[#0F3D6E]/60 pt-2 border-t border-slate-200"><span>Hace 30 días</span><span>Hoy</span></div></div></div>
+    <div class="bg-white border border-[#6FA0C8]/30 rounded-2xl p-4 flex items-center justify-between shadow-sm"><div class="flex items-center gap-3"><span class="text-xl">🛡️</span><div>
+      <p class="text-sm font-bold">Consentimiento explícito informado</p><p class="text-xs text-[#3B8DBF]">${a.consentimiento.comparte ? 'Autorizó que se vea su estado.' : 'No autorizó compartir su estado.'} ${a.consentimiento.avisar_familia ? 'Autorizó avisar a su familia.' : 'No autorizó avisar a su familia.'}</p></div></div>
+      <span class="px-3 py-1 rounded-full text-xs font-black border" style="background:${a.consentimiento.vigente ? '#E8F5E9' : '#FFEBEE'};color:${a.consentimiento.vigente ? '#2E7D32' : '#C62828'};border-color:#2E7D3244">${a.consentimiento.vigente ? 'Vigente' : 'Pausado'}</span></div>
+    <div class="bg-white border-2 border-[#0F3D6E]/20 rounded-2xl p-5 shadow-sm space-y-4"><h3 class="text-base font-black">Punto de decisión humana</h3>
+      <div class="grid grid-cols-2 gap-2.5" id="acciones">${Object.entries(ETIQ).map(([k2, t]) => `<button data-a="${k2}" class="accion py-2.5 px-3 rounded-xl border-2 border-slate-200 hover:border-[#3B8DBF] font-bold text-xs text-left ${k2 === 'derivar' ? 'col-span-2' : ''}">${t}</button>`).join('')}</div>
+      <p class="text-xs text-[#0F3D6E]/70">Recomendado: <strong>llamar primero a la persona</strong>. Derivar a terceros solo si ella lo autorizó.</p>
+      <div><label class="block text-xs font-black uppercase mb-1">Justificación profesional obligatoria <span class="text-[#C62828]">*</span></label>
+        <textarea id="just" rows="3" placeholder="Escriba el motivo de la decisión para el expediente comunitario…" class="w-full p-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F3D6E]"></textarea></div>
+      ${!a.consentimiento.comparte ? '<div><label class="block text-xs font-black uppercase mb-1">Motivo excepcional (la persona no autorizó compartir)</label><input id="exc" class="w-full p-3 rounded-xl border border-slate-300 text-sm"></div>' : '<input id="exc" type="hidden">'}
+      <div id="msg" class="bg-[#FFEBEE] border border-[#C62828]/30 rounded-xl p-3 flex items-center gap-2.5 text-[#C62828] text-xs font-bold"><span>🔒</span><span>Ninguna acción se envía sin su decisión y justificación explícita.</span></div>
+      <button id="confirmar" class="w-full py-3.5 rounded-xl bg-[#0F3D6E] text-white font-black text-sm shadow-md hover:bg-[#154d8a]">Confirmar y registrar decisión</button>
+      <button id="probar" class="w-full py-2.5 rounded-xl border-2 border-dashed border-[#C62828]/50 text-[#C62828] font-bold text-xs">🧪 Demostración: simular que el sistema intenta enviar sin su aprobación</button></div>
+    <div class="bg-white border border-[#6FA0C8]/30 rounded-2xl p-5 shadow-sm"><h3 class="text-base font-black mb-3">📋 Bitácora</h3><div class="space-y-3 text-xs" id="bitPanel">
+      ${a.bitacora.map(b => `<div class="border-l-2 border-[#3B8DBF] pl-3 py-1"><p class="font-bold">${esc(b.evento)}</p><p class="text-[#0F3D6E]/70">${esc(b.actor)} · ${esc(b.ts.replace('T', ' '))}</p>${b.detalle ? `<p class="italic mt-0.5 text-slate-600">${esc(b.detalle)}</p>` : ''}</div>`).join('')}</div></div>
+  </div>`;
+  $('velo').classList.remove('hidden'); $('panel').classList.remove('hidden');
+  document.querySelectorAll('.accion').forEach(b => b.onclick = () => { accionSel = b.dataset.a; document.querySelectorAll('.accion').forEach(x => x.classList.toggle('sel', x === b)); });
+  $('confirmar').onclick = () => confirmar(id);
+  $('probar').onclick = async () => { const r = await fetch('/api/alertas/' + id + '/intento-envio', { method: 'POST' }); const j = await r.json();
+    $('msg').innerHTML = `<span>🛑</span><span><strong>Bloqueado (${r.status}):</strong> ${esc(j.detail || j.nota)}</span>`; };
+}
+async function confirmar(id) {
+  const msg = $('msg');
+  if (!accionSel) { msg.innerHTML = '<span>🔒</span><span>Elija primero una acción.</span>'; return; }
+  const r = await fetch('/api/alertas/' + id + '/decision', { method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ accion: accionSel, justificacion: $('just').value, excepcion: $('exc') ? $('exc').value : '' }) });
+  const j = await r.json();
+  if (!r.ok) { msg.innerHTML = `<span>🔒</span><span>${esc(j.detail)}</span>`; return; }
+  msg.className = 'bg-[#E8F5E9] border border-[#2E7D32]/30 rounded-xl p-3 text-[#2E7D32] text-xs font-bold';
+  msg.innerHTML = '✅ Decisión registrada.' + (j.derivacion ? ` Mensaje mínimo enviado (simulado) a «${esc(j.derivacion.destino)}»: “${esc(j.derivacion.mensaje)}”` : '');
+  setTimeout(async () => { cerrar(); await cargarAlertas(); }, 1800);
+}
+function cerrar() { $('panel').classList.add('hidden'); $('velo').classList.add('hidden'); }
+$('velo').onclick = cerrar;
+
+async function cargarPersonas() {
+  const [ps, cola] = await Promise.all([fetch('/api/personas').then(r => r.json()), fetch('/api/alertas').then(r => r.json())]);
+  const nivel = {}; cola.alertas.forEach(a => nivel[a.persona.persona_id] = a.nivel);
+  const vis = ps.filter(p => p.consentimiento === 'vigente' && p.comparte);
+  $('tabla-personas').innerHTML = `<table class="w-full text-sm"><thead class="bg-[#F4F8FB] text-left text-xs uppercase"><tr><th class="p-3">Persona</th><th class="p-3">Tramo</th><th class="p-3">Zona</th><th class="p-3">Estado</th></tr></thead><tbody>` +
+    vis.map(p => `<tr class="border-t border-slate-100"><td class="p-3 font-bold">${esc(p.alias)} <span class="text-xs text-slate-400">${esc(p.persona_id)}</span></td><td class="p-3">${esc(p.tramo_etario)}</td><td class="p-3">${esc(p.zona)}</td><td class="p-3">${chip(nivel[p.persona_id] || 'Sin novedad')}</td></tr>`).join('') + '</tbody></table>';
+}
+async function cargarHistorial() {
+  const b = await (await fetch('/api/bitacora')).json();
+  $('bitacora').innerHTML = b.map(x => `<div class="border-l-2 ${x.evento.startsWith('ENVÍO BLOQUEADO') ? 'border-[#C62828]' : 'border-[#3B8DBF]'} pl-3 py-1 text-sm"><p class="font-bold">${esc(x.evento)}</p><p class="text-xs text-[#0F3D6E]/70">${esc(x.actor)} · ${esc(x.ts.replace('T', ' '))}${x.persona_id ? ' · ' + esc(x.persona_id) : ''}</p>${x.detalle ? `<p class="text-xs italic text-slate-600">${esc(x.detalle)}</p>` : ''}</div>`).join('') || '<p>Sin eventos.</p>';
+}
+function tablaGrupo(titulo, g) {
+  return `<div class="bg-white rounded-2xl border border-[#6FA0C8]/30 p-5"><h3 class="font-black mb-3">${titulo}</h3><table class="w-full text-sm"><thead class="text-left text-xs uppercase text-slate-500"><tr><th class="py-1">Grupo</th><th>Personas</th><th>Con alerta</th><th>Falsos positivos*</th></tr></thead><tbody>` +
+    Object.entries(g).map(([n, x]) => `<tr class="border-t border-slate-100"><td class="py-1.5 font-bold">${esc(n)}</td><td>${x.n}</td><td>${(x.tasa_alertas * 100).toFixed(0)} %</td><td>${(x.tasa_falsos_positivos * 100).toFixed(0)} %</td></tr>`).join('') + '</tbody></table></div>';
+}
+async function cargarEquidad() {
+  const d = await (await fetch('/api/equidad')).json(); const c = d.desempeno.clasificacion, t = d.desempeno.trampas;
+  $('eq-nota').textContent = d.nota;
+  $('eq').innerHTML = `
+  <div class="bg-white rounded-2xl border border-[#6FA0C8]/30 p-5"><h3 class="font-black mb-2">Cómo funciona la IA y qué modelos usamos</h3><ul class="text-sm space-y-1.5">${d.modelos.map(m => `<li>• <strong>${esc(m.nombre)}</strong> — ${esc(m.tipo)}. ${esc(m.uso)}.</li>`).join('')}</ul>
+    <p class="text-xs mt-3 text-[#0F3D6E]/70">La IA no usa edad, sexo, zona ni ingreso como variable. Solo compara a cada persona consigo misma y <strong>prioriza</strong>; las decisiones son humanas.</p></div>
+  <div class="bg-white rounded-2xl border border-[#6FA0C8]/30 p-5"><h3 class="font-black mb-2">Desempeño sobre datos simulados</h3>
+    <p class="text-sm">Detectó <strong>${c['Revisar+Observar'].tp} de ${c['Revisar+Observar'].tp + c['Revisar+Observar'].fn}</strong> personas con cambio de riesgo simulado (sensibilidad ${(c['Revisar+Observar'].recall * 100).toFixed(0)} %). Precisión ${(c['Revisar+Observar'].precision * 100).toFixed(0)} %: ${c['Revisar+Observar'].fp} falsas alarmas, que un humano descarta.</p>
+    <p class="text-sm mt-2">Casos «trampa»: personas reservadas con alerta ${t.reservado_estable.alertadas} de ${t.reservado_estable.n}; personas con mala conexión con alerta ${t.baja_conectividad.alertadas} de ${t.baja_conectividad.n}.</p>
+    <p class="text-xs mt-2 text-[#0F3D6E]/70">Limitaciones: no detecta cambios en quien ya tenía muy poco contacto; con pocos días de historia es menos fiable; las cifras vienen de datos inventados.</p></div>
+  ${tablaGrupo('Por zona', d.equidad.zona)}${tablaGrupo('Por sexo', d.equidad.sexo)}${tablaGrupo('Por tramo etario', d.equidad.tramo_etario)}
+  <p class="text-xs text-slate-500">* Falsos positivos: alertas entre personas sin riesgo simulado. Los grupos pequeños (p. ej. 85+) tienen mucha variación por azar; revisar con datos reales antes de cualquier uso.</p>`;
+}
+
+const cargas = { alertas: cargarAlertas, personas: cargarPersonas, historial: cargarHistorial, equidad: cargarEquidad };
+function ir(v) {
+  vista = v; ['alertas','personas','historial','equidad'].forEach(x => $('v-' + x).classList.toggle('hidden', x !== v));
+  document.querySelectorAll('.nav').forEach(a => { const on = a.dataset.v === v; a.classList.toggle('nav-on', on); a.classList.toggle('hover:bg-[#E3EEF7]', !on); });
+  cargas[v]();
+}
+document.querySelectorAll('.nav').forEach(a => a.onclick = () => ir(a.dataset.v));
+ir('alertas');
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Cuidado - Confirmación</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Nunito', 'Plus Jakarta Sans', sans-serif;
+      background-color: #F4F8FC;
+      color: #0F3D6E;
+      user-select: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen h-screen flex flex-col justify-between p-6 overflow-hidden">
+
+  <!-- Header -->
+  <header class="flex items-center justify-between pt-2">
+    <div class="flex items-center gap-3">
+      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFVb5Haoy_x_vn5NDO8sGWRN1-m5XczYRkRuf88Vq0cAiP0376EDl5t3bUn6q0xShwBakQmxB3OSIOs7mlWf0kFatT2mdo03dvZ3J5xw15s9ntdYnGNpmKmBNg07Lij6X-S7r_gV9DxqXpsyy93x4q_2GYndHX6dfqe6vXhPyc-vpYLJBGwGCMzd1aCBOpeIljwQ8FUEo89SQtbD7NP9S3UhjkJDU4uNg240EdfHE2v3tAjjDW5FMjjw" alt="Tu Cuidado" class="h-12 w-auto object-contain">
+      <span class="text-xl font-black text-[#0F3D6E]">Tu Cuidado</span>
+    </div>
+  </header>
+
+  <!-- Mensaje de Acompañamiento y Confirmación -->
+  <main class="flex flex-col items-center text-center my-auto px-3">
+    <!-- Círculo grande con check verde de sin novedad -->
+    <div class="w-36 h-36 rounded-full bg-[#E8F5E9] border-4 border-[#2E7D32] flex items-center justify-center mb-8 shadow-xl">
+      <svg class="w-20 h-20 text-[#2E7D32]" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      </svg>
+    </div>
+
+    <h1 class="text-[38px] font-black text-[#0F3D6E] leading-tight mb-4">
+      ¡Gracias, don Luis!
+    </h1>
+    
+    <p class="text-[32px] font-bold text-[#3B8DBF] leading-snug mb-8">
+      Que tenga un lindo día
+    </p>
+
+    <!-- Tarjeta cálida de tranquilidad -->
+    <div class="w-full max-w-sm bg-white border border-[#6FA0C8]/40 rounded-3xl p-6 shadow-sm text-left">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="text-2xl">🌱</span>
+        <h2 class="text-xl font-bold text-[#0F3D6E]">Acompañamiento activo</h2>
+      </div>
+      <p class="text-lg text-[#0F3D6E]/80 leading-normal">
+        Su respuesta quedó guardada con cariño. Nos volveremos a saludar mañana por la mañana.
+      </p>
+    </div>
+  </main>
+
+  <!-- Botón de salida o volver -->
+  <footer class="pt-2 pb-1">
+    <button class="w-full py-5 rounded-2xl bg-[#0F3D6E] text-white text-[28px] font-black shadow-lg shadow-[#0F3D6E]/20 active:scale-[0.98] transition-transform">
+      Listo por hoy
+    </button>
+  </footer>
+
+</body>
+</html>

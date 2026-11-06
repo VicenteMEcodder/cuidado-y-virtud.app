@@ -1,0 +1,29 @@
+# Android / Gradle
+*.iml
+.gradle/
+.kotlin/
+local.properties
+build/
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.aab
+
+# IDE y configuración local (rutas de cada equipo)
+.idea/
+.claude/
+.vscode/
+.DS_Store
+
+# Python (prototipo web)
+__pycache__/
+*.pyc
+.pytest_cache/
+tu_cuidado/data/*.db
+
+# Material del evento que NO es nuestro o tiene datos personales
+Bases_Hackathon_IA_Congreso_Social_UC_2026.pdf
+Correo de DuocUC*.pdf
+VID_*.txt
+stitch_plataforma_web_tu_cuidado.zip

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Cuidado - Check-in diario</title>
+  <script src="/static/tailwind.js"></script>
+  <style>
+    body { font-family: 'Nunito','Plus Jakarta Sans','Segoe UI',system-ui,sans-serif; background:#F4F8FC; color:#0F3D6E; user-select:none; -webkit-tap-highlight-color:transparent; }
+    .pulse-ring { animation: pulse-waves 2.4s cubic-bezier(0.4,0,0.6,1) infinite; }
+    .escuchando .pulse-ring { animation-duration: 0.9s; background:#E85D04; }
+    @keyframes pulse-waves { 0%,100% {transform:scale(1);opacity:.25;} 50% {transform:scale(1.18);opacity:.6;} }
+    .fade { animation: fade .35s ease; } @keyframes fade { from {opacity:0; transform:translateY(8px);} to {opacity:1; transform:none;} }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-6 max-w-md mx-auto">
+
+  <header class="flex items-center justify-between pt-2">
+    <div class="flex items-center gap-3">
+      <img src="/static/logo.webp" alt="Tu Cuidado" class="h-14 w-auto object-contain">
+      <span class="text-xl font-black tracking-tight">Tu Cuidado</span>
+    </div>
+    <span id="dia" class="inline-flex items-center px-4 py-1.5 rounded-full bg-[#E3EEF7] font-bold text-sm"></span>
+  </header>
+
+  <!-- Pantalla de preguntas -->
+  <main id="pregunta" class="flex flex-col items-center text-center my-auto px-2 fade">
+    <p id="saludo" class="text-[32px] font-bold text-[#3B8DBF] leading-tight mb-2">Buenos días</p>
+    <h1 id="texto" class="text-[38px] font-black leading-tight tracking-tight mb-6">¿Cómo amaneció hoy?</h1>
+
+    <div id="micwrap" class="relative flex items-center justify-center mb-6">
+      <div class="pulse-ring absolute w-44 h-44 rounded-full bg-[#6FA0C8]"></div>
+      <div class="absolute w-36 h-36 rounded-full bg-[#3B8DBF]/20"></div>
+      <button id="mic" aria-label="Hablar" class="relative w-32 h-32 rounded-full bg-[#0F3D6E] text-white flex flex-col items-center justify-center shadow-2xl shadow-[#0F3D6E]/40 active:scale-95 transition-transform border-4 border-white">
+        <svg class="w-12 h-12 mb-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+        <span id="miclabel" class="text-base font-extrabold tracking-wide uppercase">Hable aquí</span>
+      </button>
+    </div>
+    <p id="ayudaVoz" class="text-[18px] font-semibold text-[#0F3D6E]/70 mb-3 min-h-[28px]"></p>
+
+    <div id="opciones" class="w-full flex flex-col gap-3 max-w-sm"></div>
+
+    <button id="norespondo" class="mt-3 text-[#3B8DBF] font-bold text-[22px] underline underline-offset-8 active:text-[#0F3D6E] py-2">Prefiero no responder</button>
+  </main>
+
+  <!-- Pantalla de agradecimiento -->
+  <main id="gracias" class="hidden flex-col items-center text-center my-auto px-3 fade">
+    <div id="iconoGracias" class="w-36 h-36 rounded-full bg-[#E8F5E9] border-4 border-[#2E7D32] flex items-center justify-center mb-8 shadow-xl">
+      <svg class="w-20 h-20 text-[#2E7D32]" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h1 id="gTitulo" class="text-[38px] font-black leading-tight mb-4">¡Gracias!</h1>
+    <p id="gSub" class="text-[30px] font-bold text-[#3B8DBF] leading-snug mb-8">Que tenga un lindo día</p>
+    <div class="w-full bg-white border border-[#6FA0C8]/40 rounded-3xl p-6 shadow-sm text-left">
+      <div class="flex items-center gap-3 mb-2"><span class="text-2xl">🌱</span><h2 id="gCaja" class="text-xl font-bold">Acompañamiento activo</h2></div>
+      <p id="gTexto" class="text-lg text-[#0F3D6E]/80 leading-normal">Su respuesta quedó guardada con cariño. Nos volveremos a saludar mañana por la mañana.</p>
+    </div>
+    <a href="/mayor/compartir" class="mt-6 text-[#3B8DBF] font-bold text-[22px] underline underline-offset-8">¿Qué quiere compartir?</a>
+  </main>
+
+  <!-- Confirmación doble del pedido de ayuda -->
+  <div id="dialogoSos" class="hidden fixed inset-0 bg-[#0F3D6E]/70 flex items-center justify-center p-6 z-50">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl">
+      <p class="text-[34px] font-black mb-2">¿Necesita ayuda?</p>
+      <p class="text-[22px] font-semibold text-[#0F3D6E]/80 mb-5">Avisaremos a una persona real de la Oficina del Adulto Mayor.</p>
+      <button id="sosSi" class="w-full py-5 rounded-2xl bg-[#E85D04] text-white text-[28px] font-black mb-3">Sí, necesito ayuda</button>
+      <button id="sosNo" class="w-full py-5 rounded-2xl bg-white border-2 border-[#3B8DBF] text-[#0F3D6E] text-[26px] font-black">No, me equivoqué</button>
+    </div>
+  </div>
+
+  <footer id="pie" class="pt-2 pb-1">
+    <button id="sos" class="w-full py-5 rounded-2xl bg-[#E85D04] text-white text-[28px] font-black flex items-center justify-center gap-3 shadow-lg shadow-[#E85D04]/30 active:scale-[0.98] transition-transform">
+      <span class="text-3xl">🆘</span><span>Necesito ayuda ahora</span>
+    </button>
+    <p class="text-center text-xs font-semibold text-[#0F3D6E]/70 mt-2">Avisa a una persona real de la Oficina del Adulto Mayor. No se graba su voz.</p>
+  </footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+let persona = null, paso = 0, respuestas = {}, canal = 'botones', escuchando = false, rec = null;
+
+// Preguntas del check-in (respuestas codificadas; nunca se guarda audio ni texto)
+const PREGUNTAS = [
+  { campo: 'animo', texto: '¿Cómo amaneció hoy?', opciones: [
+      { v: 'bien', e: '😊', t: 'Bien', k: ['bien','bueno','excelente','contento','contenta','tranquilo','tranquila'] },
+      { v: 'regular', e: '😐', t: 'Más o menos', k: ['más o menos','mas o menos','regular','así así','asi asi','normal'] },
+      { v: 'mal', e: '😟', t: 'Mal', k: ['mal','triste','pésimo','pesimo','decaído','decaido'] } ] },
+  { campo: 'contacto_social', texto: '¿Habló hoy con alguien?', opciones: [
+      { v: 'si', e: '💬', t: 'Sí', k: ['sí','si ','claro','con mi','hablé','hable'] },
+      { v: 'no', e: '🤫', t: 'No', k: ['no','nadie'] } ] },
+  { campo: 'actividades', texto: '¿Pudo hacer sus cosas de siempre?', opciones: [
+      { v: 'completo', e: '👍', t: 'Sí, todo', k: ['sí','si ','todo','claro'] },
+      { v: 'parcial', e: '🤏', t: 'Algunas', k: ['algunas','un poco','más o menos','mas o menos','a medias'] },
+      { v: 'no', e: '🛋️', t: 'No pude', k: ['no'] } ] },
+  { campo: 'medicacion', texto: '¿Tomó sus remedios?', solo_cronico: true, opciones: [
+      { v: 'tomo', e: '💊', t: 'Sí', k: ['sí','si ','claro','ya los tomé','tome'] },
+      { v: 'no_tomo', e: '⏳', t: 'Todavía no', k: ['no','todavía','todavia','aún','aun'] } ] },
+];
+let preguntas = [];
+
+function hablar(texto) { // lee la pregunta en voz alta (si el navegador lo permite)
+  try { if (!window.speechSynthesis) return; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(texto); u.lang = 'es-CL'; u.rate = 0.9; speechSynthesis.speak(u); } catch (e) {}
+}
+
+function mostrar() {
+  const q = preguntas[paso];
+  $('pregunta').classList.remove('fade'); void $('pregunta').offsetWidth; $('pregunta').classList.add('fade');
+  $('texto').textContent = q.texto;
+  $('ayudaVoz').textContent = '';
+  const cont = $('opciones'); cont.innerHTML = '';
+  q.opciones.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'w-full py-3.5 px-6 rounded-2xl bg-white border-2 border-[#3B8DBF]/40 hover:border-[#3B8DBF] text-[#0F3D6E] text-[30px] font-extrabold flex items-center justify-center gap-4 shadow-sm active:bg-blue-50 transition-all';
+    b.innerHTML = `<span class="text-4xl">${o.e}</span><span>${o.t}</span>`;
+    b.onclick = () => responder(o.v, 'botones');
+    cont.appendChild(b);
+  });
+  hablar((paso === 0 ? $('saludo').textContent + '. ' : '') + q.texto);
+}
+
+function responder(valor, via) {
+  const q = preguntas[paso];
+  respuestas[q.campo] = valor;
+  if (via === 'voz') canal = 'voz';
+  paso++;
+  if (paso < preguntas.length) mostrar(); else terminar();
+}
+
+async function terminar(sinResponder) {
+  if (!sinResponder) {
+    await fetch('/api/checkin', { method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ persona_id: persona.persona_id, canal, ...respuestas }) });
+  }
+  $('pregunta').classList.add('hidden'); $('gracias').classList.remove('hidden'); $('gracias').classList.add('flex');
+  $('gTitulo').textContent = '¡Gracias, ' + persona.saludo + '!';
+  if (sinResponder) { $('gCaja').textContent = 'Está bien'; $('gTexto').textContent = 'No pasa nada. Hoy no tiene que responder. Nos saludamos mañana.'; }
+}
+
+// Voz: se reconoce solo una palabra clave en el navegador; nada se envía ni se guarda como audio.
+function normaliza(t) { return ' ' + t.toLowerCase().normalize('NFC') + ' '; }
+function interpretar(texto) {
+  const t = normaliza(texto);
+  const q = preguntas[paso];
+  // se prueban primero las opciones más específicas (más largas)
+  const cand = q.opciones.map(o => ({ o, m: Math.max(0, ...o.k.filter(k => t.includes(k.includes(' ') || k.length > 3 ? k : ' ' + k + ' ' )).map(k => k.length)) }))
+                         .filter(x => x.m > 0).sort((a, b) => b.m - a.m);
+  return cand.length ? cand[0].o.v : null;
+}
+function iniciarVoz() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { $('ayudaVoz').textContent = 'Use los botones grandes de abajo 👇'; return; }
+  if (escuchando) { try { rec.stop(); } catch (e) {} return; }
+  rec = new SR(); rec.lang = 'es-CL'; rec.interimResults = false; rec.maxAlternatives = 3;
+  rec.onstart = () => { escuchando = true; $('micwrap').classList.add('escuchando'); $('miclabel').textContent = 'Escuchando'; $('ayudaVoz').textContent = 'Diga su respuesta…'; };
+  rec.onend = () => { escuchando = false; $('micwrap').classList.remove('escuchando'); $('miclabel').textContent = 'Hable aquí'; };
+  rec.onerror = () => { $('ayudaVoz').textContent = 'No lo pude escuchar. Use los botones 👇'; };
+  rec.onresult = e => {
+    const alts = Array.from(e.results[0]).map(a => a.transcript);
+    for (const a of alts) { const v = interpretar(a); if (v) { $('ayudaVoz').textContent = 'Le entendí: “' + a + '”'; setTimeout(() => responder(v, 'voz'), 700); return; } }
+    $('ayudaVoz').textContent = 'No le entendí bien. Pruebe de nuevo o use los botones 👇';
+  };
+  try { rec.start(); } catch (e) {}
+}
+
+$('mic').onclick = iniciarVoz;
+$('norespondo').onclick = () => { try { speechSynthesis.cancel(); } catch (e) {} terminar(true); };
+
+// SOS con doble confirmación
+$('sos').onclick = () => $('dialogoSos').classList.remove('hidden');
+$('sosNo').onclick = () => $('dialogoSos').classList.add('hidden');
+$('sosSi').onclick = async () => {
+  await fetch('/api/sos', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ persona_id: persona.persona_id }) });
+  $('dialogoSos').classList.add('hidden');
+  $('pregunta').classList.add('hidden'); $('gracias').classList.remove('hidden'); $('gracias').classList.add('flex');
+  $('iconoGracias').className = 'w-36 h-36 rounded-full bg-[#FFF3E0] border-4 border-[#E85D04] flex items-center justify-center mb-8 shadow-xl';
+  $('iconoGracias').innerHTML = '<span class="text-7xl">🤝</span>';
+  $('gTitulo').textContent = 'Ya avisamos';
+  $('gSub').textContent = 'Una persona se comunicará con usted';
+  $('gCaja').textContent = 'No está solo/a'; $('gTexto').textContent = 'Una persona real de la Oficina del Adulto Mayor fue avisada y decidirá cómo ayudarle.';
+  $('pie').classList.add('hidden');
+};
+
+(async () => {
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  $('dia').textContent = 'Hoy es ' + dias[new Date().getDay()];
+  const h = new Date().getHours();
+  persona = await (await fetch('/api/demo/persona' + (params.get('p') ? '?p=' + params.get('p') : ''))).json();
+  const cons = await (await fetch('/api/consentimiento/' + persona.persona_id)).json();
+  $('saludo').textContent = (h < 12 ? 'Buenos días' : h < 20 ? 'Buenas tardes' : 'Buenas noches') + ', ' + persona.saludo;
+  preguntas = PREGUNTAS.filter(q => !q.solo_cronico || persona.medicacion_cronica);
+  if (cons.pausado) { $('texto').textContent = 'El acompañamiento está en pausa'; $('opciones').innerHTML = ''; $('micwrap').classList.add('hidden'); $('norespondo').classList.add('hidden'); return; }
+  mostrar();
+})();
+</script>
+</body>
+</html>

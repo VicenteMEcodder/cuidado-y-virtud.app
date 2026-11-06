@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Cuidado - Gestión Administrador</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; color: #0F3D6E; }
+  </style>
+</head>
+<body class="min-h-screen flex bg-[#F4F8FB]">
+
+  <!-- Barra lateral Admin -->
+  <aside class="w-64 bg-white border-r border-[#6FA0C8]/25 flex flex-col justify-between p-5 flex-shrink-0">
+    <div>
+      <div class="flex items-center gap-3 px-2 py-3 mb-8">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFVb5Haoy_x_vn5NDO8sGWRN1-m5XczYRkRuf88Vq0cAiP0376EDl5t3bUn6q0xShwBakQmxB3OSIOs7mlWf0kFatT2mdo03dvZ3J5xw15s9ntdYnGNpmKmBNg07Lij6X-S7r_gV9DxqXpsyy93x4q_2GYndHX6dfqe6vXhPyc-vpYLJBGwGCMzd1aCBOpeIljwQ8FUEo89SQtbD7NP9S3UhjkJDU4uNg240EdfHE2v3tAjjDW5FMjjw" alt="Logo Tu Cuidado" class="h-10 w-auto">
+        <div>
+          <span class="text-lg font-black text-[#0F3D6E] block leading-tight">Tu Cuidado</span>
+          <span class="text-xs font-semibold text-[#3B8DBF]">Administración General</span>
+        </div>
+      </div>
+
+      <nav class="space-y-2">
+        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#0F3D6E] text-white font-bold shadow-md shadow-[#0F3D6E]/15">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span class="text-base">Gestión</span>
+        </a>
+        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-[#0F3D6E]/80 hover:bg-[#E3EEF7] font-semibold transition-colors">
+          <svg class="w-5 h-5 text-[#3B8DBF]" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span class="text-base">Reportes Comunales</span>
+        </a>
+        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-[#0F3D6E]/80 hover:bg-[#E3EEF7] font-semibold transition-colors">
+          <svg class="w-5 h-5 text-[#3B8DBF]" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          <span class="text-base">Seguridad y Auditoría</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-3 bg-[#F4F8FB] rounded-2xl border border-[#6FA0C8]/30 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-[#0F3D6E] text-white flex items-center justify-center font-bold text-sm">
+        AD
+      </div>
+      <div class="overflow-hidden">
+        <p class="text-sm font-bold text-[#0F3D6E] truncate">Administrador Central</p>
+        <p class="text-xs text-[#3B8DBF]">Municipalidad de Valparaíso</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Contenedor Principal -->
+  <main class="flex-1 p-8 overflow-y-auto">
+    
+    <!-- Encabezado con Botón de Registro -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-black text-[#0F3D6E]">Gestión del Sistema Comunitario</h1>
+        <p class="text-base text-[#3B8DBF] font-medium mt-1">
+          Padrón de acompañamiento, enrolamiento seguro de dispositivos y asignación territorial
+        </p>
+      </div>
+      <button class="px-5 py-3 rounded-2xl bg-[#0F3D6E] text-white font-bold text-sm hover:bg-[#154d8a] shadow-lg shadow-[#0F3D6E]/20 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span>Registrar persona</span>
+      </button>
+    </div>
+
+    <!-- AVISO VISIBLE OBLIGATORIO DE PRIVACIDAD ADMINISTRATIVA -->
+    <div class="bg-[#EBF3FA] border-2 border-[#3B8DBF] rounded-2xl p-4 mb-6 flex items-center gap-3 shadow-sm">
+      <div class="w-10 h-10 rounded-xl bg-[#0F3D6E] text-white flex items-center justify-center text-xl flex-shrink-0">
+        🛡️
+      </div>
+      <div class="text-sm">
+        <p class="font-black text-[#0F3D6E]">Privacidad por diseño garantizada</p>
+        <p class="text-[#0F3D6E]/80 font-medium">El Administrador gestiona accesos y dispositivos, pero <strong>no ve respuestas de salud ni alertas personales</strong> de las personas mayores.</p>
+      </div>
+    </div>
+
+    <!-- Pestañas de Navegación -->
+    <div class="flex items-center gap-2 border-b border-slate-200 mb-6">
+      <button class="px-5 py-3 border-b-2 border-[#0F3D6E] text-[#0F3D6E] font-black text-sm flex items-center gap-2">
+        <span>👥</span> Personas (42)
+      </button>
+      <button class="px-5 py-3 text-slate-500 hover:text-[#0F3D6E] font-bold text-sm flex items-center gap-2">
+        <span>📱</span> Dispositivos
+      </button>
+      <button class="px-5 py-3 text-slate-500 hover:text-[#0F3D6E] font-bold text-sm flex items-center gap-2">
+        <span>🤝</span> Cuidadores y asignaciones
+      </button>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+      
+      <!-- Tabla de Personas (2 Columnas de ancho) -->
+      <div class="col-span-2 bg-white rounded-2xl border border-[#6FA0C8]/30 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="text-base font-black text-[#0F3D6E]">Padrón Seudónimo de Acompañamiento</h2>
+          <span class="text-xs font-semibold text-[#3B8DBF]">Datos protegidos bajo Ley 19.628</span>
+        </div>
+        
+        <table class="w-full text-left text-sm">
+          <thead class="bg-[#F8FAFC] text-[#0F3D6E] font-black text-xs uppercase border-b border-slate-100">
+            <tr>
+              <th class="py-3.5 px-4">ID Seudónimo</th>
+              <th class="py-3.5 px-4">Tramo de Edad</th>
+              <th class="py-3.5 px-4">Zona / Sector</th>
+              <th class="py-3.5 px-4">Consentimiento</th>
+              <th class="py-3.5 px-4 text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-medium text-[#0F3D6E]">
+            <tr class="hover:bg-blue-50/40">
+              <td class="py-3.5 px-4 font-bold text-[#0F3D6E]">PM-VAL-042 (Rosa M.)</td>
+              <td class="py-3.5 px-4">75 - 79 años</td>
+              <td class="py-3.5 px-4">Cerro Alegre</td>
+              <td class="py-3.5 px-4">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E8F5E9] text-[#2E7D32] text-xs font-bold">
+                  ● Vigente
+                </span>
+              </td>
+              <td class="py-3.5 px-4 text-right">
+                <button class="text-xs font-bold text-[#3B8DBF] hover:underline">Gestionar</button>
+              </td>
+            </tr>
+            <tr class="hover:bg-blue-50/40">
+              <td class="py-3.5 px-4 font-bold text-[#0F3D6E]">PM-VAL-019 (Luis B.)</td>
+              <td class="py-3.5 px-4">80 - 84 años</td>
+              <td class="py-3.5 px-4">Cerro Cordillera</td>
+              <td class="py-3.5 px-4">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E8F5E9] text-[#2E7D32] text-xs font-bold">
+                  ● Vigente
+                </span>
+              </td>
+              <td class="py-3.5 px-4 text-right">
+                <button class="text-xs font-bold text-[#3B8DBF] hover:underline">Gestionar</button>
+              </td>
+            </tr>
+            <tr class="hover:bg-blue-50/40">
+              <td class="py-3.5 px-4 font-bold text-[#0F3D6E]">PM-VAL-088 (Marta C.)</td>
+              <td class="py-3.5 px-4">70 - 74 años</td>
+              <td class="py-3.5 px-4">Playa Ancha</td>
+              <td class="py-3.5 px-4">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FFF8E1] text-[#B78103] text-xs font-bold">
+                  ⏸️ Pausado temporal
+                </span>
+              </td>
+              <td class="py-3.5 px-4 text-right">
+                <button class="text-xs font-bold text-[#3B8DBF] hover:underline">Gestionar</button>
+              </td>
+            </tr>
+            <tr class="hover:bg-blue-50/40">
+              <td class="py-3.5 px-4 font-bold text-[#0F3D6E]">PM-VAL-031 (Eduardo S.)</td>
+              <td class="py-3.5 px-4">80 - 84 años</td>
+              <td class="py-3.5 px-4">Playa Ancha</td>
+              <td class="py-3.5 px-4">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E8F5E9] text-[#2E7D32] text-xs font-bold">
+                  ● Vigente
+                </span>
+              </td>
+              <td class="py-3.5 px-4 text-right">
+                <button class="text-xs font-bold text-[#3B8DBF] hover:underline">Gestionar</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Enrolar Dispositivo & Asignación (1 Columna) -->
+      <div class="space-y-6">
+        
+        <!-- Tarjeta Enrolar Dispositivo -->
+        <div class="bg-white rounded-2xl border border-[#6FA0C8]/30 p-5 shadow-sm">
+          <h2 class="text-base font-black text-[#0F3D6E] mb-1">Enrolar dispositivo</h2>
+          <p class="text-xs text-[#3B8DBF] mb-4">Vinculación simple y segura para la persona mayor</p>
+          
+          <div class="bg-[#F4F8FB] border border-dashed border-[#3B8DBF] rounded-2xl p-4 flex flex-col items-center text-center">
+            <!-- QR Ficticio SVG -->
+            <div class="w-32 h-32 bg-white p-2 rounded-xl shadow-sm border border-slate-200 mb-3 flex items-center justify-center">
+              <svg class="w-28 h-28" viewBox="0 0 100 100" fill="#0F3D6E">
+                <rect x="10" y="10" width="24" height="24" fill="#0F3D6E"/>
+                <rect x="14" y="14" width="16" height="16" fill="white"/>
+                <rect x="18" y="18" width="8" height="8" fill="#0F3D6E"/>
+                <rect x="66" y="10" width="24" height="24" fill="#0F3D6E"/>
+                <rect x="70" y="14" width="16" height="16" fill="white"/>
+                <rect x="74" y="18" width="8" height="8" fill="#0F3D6E"/>
+                <rect x="10" y="66" width="24" height="24" fill="#0F3D6E"/>
+                <rect x="14" y="70" width="16" height="16" fill="white"/>
+                <rect x="18" y="74" width="8" height="8" fill="#0F3D6E"/>
+                <rect x="42" y="15" width="12" height="12"/>
+                <rect x="42" y="42" width="16" height="16"/>
+                <rect x="65" y="45" width="15" height="10"/>
+                <rect x="45" y="70" width="20" height="15"/>
+                <rect x="75" y="75" width="12" height="12"/>
+              </svg>
+            </div>
+            
+            <span class="text-xs font-bold text-[#0F3D6E]/70 uppercase">Código de un solo uso</span>
+            <div class="text-2xl font-black text-[#0F3D6E] tracking-widest bg-white px-4 py-1.5 rounded-xl border border-slate-200 my-1">
+              748 - 291
+            </div>
+            <p class="text-xs font-extrabold text-[#2E7D32] mt-1">
+              ✨ No necesitará ingresar contraseña
+            </p>
+          </div>
+          
+          <button class="w-full mt-4 py-2.5 rounded-xl bg-[#E3EEF7] text-[#0F3D6E] font-bold text-xs hover:bg-[#d5e7f5] transition-colors">
+            Generar nuevo enlace / Imprimir ficha
+          </button>
+        </div>
+
+        <!-- Asignación Territorial Rápida -->
+        <div class="bg-white rounded-2xl border border-[#6FA0C8]/30 p-5 shadow-sm">
+          <h2 class="text-base font-black text-[#0F3D6E] mb-2">Asignaciones de Cuidado</h2>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#F8FAFC]">
+              <div>
+                <p class="font-bold text-[#0F3D6E]">Camila Valenzuela</p>
+                <p class="text-slate-500">Cerro Alegre • 18 personas</p>
+              </div>
+              <span class="px-2 py-1 bg-[#E8F5E9] text-[#2E7D32] rounded-lg font-bold">Activa</span>
+            </div>
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#F8FAFC]">
+              <div>
+                <p class="font-bold text-[#0F3D6E]">Esteban Morales</p>
+                <p class="text-slate-500">Playa Ancha • 24 personas</p>
+              </div>
+              <span class="px-2 py-1 bg-[#E8F5E9] text-[#2E7D32] rounded-lg font-bold">Activo</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+</body>
+</html>

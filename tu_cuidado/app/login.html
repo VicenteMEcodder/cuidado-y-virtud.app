@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Cuidado - Ingreso</title>
+  <script src="/static/tailwind.js"></script>
+  <style> body { font-family:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif; background:#F4F8FB; color:#0F3D6E; } </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-6"><img src="/static/logo.webp" class="h-28 mx-auto" alt="Logo"><h1 class="text-3xl font-black mt-2">Tu Cuidado</h1>
+      <p class="font-semibold text-[#3B8DBF]">Acompañamiento con decisión humana</p></div>
+
+    <div class="bg-white rounded-3xl border border-[#6FA0C8]/30 shadow-sm p-6 space-y-4">
+      <p class="text-xs font-semibold text-[#0F3D6E]/70 bg-[#E3EEF7] rounded-xl p-3">🧪 Prototipo del Hackathon · datos 100 % sintéticos. El inicio de sesión está simulado: no hay cuentas reales.</p>
+      <div><label class="block text-xs font-black uppercase mb-1">Correo institucional</label><input class="w-full p-3 rounded-xl border border-slate-300" value="camila.valenzuela@oficina-adulto-mayor.example" readonly></div>
+      <div><label class="block text-xs font-black uppercase mb-1">Contraseña</label><input type="password" class="w-full p-3 rounded-xl border border-slate-300" value="••••••••" readonly></div>
+      <label class="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked class="w-4 h-4"> Recordar este dispositivo en mi turno <span class="text-xs font-semibold text-[#3B8DBF]">(solo Cuidador)</span></label>
+      <a href="/cuidador" class="block text-center w-full py-3.5 rounded-xl bg-[#0F3D6E] text-white font-black shadow-md">Entrar como Cuidador/a</a>
+      <a href="/admin" class="block text-center w-full py-3 rounded-xl border-2 border-[#0F3D6E] text-[#0F3D6E] font-black">Entrar como Administrador/a</a>
+      <p class="text-xs text-center text-[#0F3D6E]/70">El Administrador siempre debe iniciar sesión de nuevo en cada ingreso.</p>
+    </div>
+
+    <div class="mt-5 text-center"><a href="/mayor" class="inline-block px-6 py-4 rounded-2xl bg-white border-2 border-[#3B8DBF] font-black text-lg">👵 Vista de la persona mayor<br><span class="text-xs font-semibold text-[#0F3D6E]/70">no necesita iniciar sesión: el Administrador la deja lista una vez</span></a></div>
+  </div>
+</body>
+</html>

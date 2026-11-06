@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Cuidado - Inicio de Sesión</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F4F8FB; color: #0F3D6E; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-[#F4F8FB] to-[#E9F1F7]">
+
+  <!-- Tarjeta de Login -->
+  <div class="w-full max-w-md bg-white rounded-3xl border border-[#6FA0C8]/30 shadow-2xl p-8 relative overflow-hidden">
+    
+    <!-- Banda decorativa sutil -->
+    <div class="h-2 w-full bg-gradient-to-r from-[#0F3D6E] via-[#3B8DBF] to-[#6FA0C8] absolute top-0 left-0"></div>
+
+    <!-- Identidad y Logo -->
+    <div class="flex flex-col items-center text-center mb-7">
+      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFVb5Haoy_x_vn5NDO8sGWRN1-m5XczYRkRuf88Vq0cAiP0376EDl5t3bUn6q0xShwBakQmxB3OSIOs7mlWf0kFatT2mdo03dvZ3J5xw15s9ntdYnGNpmKmBNg07Lij6X-S7r_gV9DxqXpsyy93x4q_2GYndHX6dfqe6vXhPyc-vpYLJBGwGCMzd1aCBOpeIljwQ8FUEo89SQtbD7NP9S3UhjkJDU4uNg240EdfHE2v3tAjjDW5FMjjw" alt="Logo Tu Cuidado" class="h-20 w-auto mb-3">
+      <h1 class="text-2xl font-black text-[#0F3D6E]">Tu Cuidado</h1>
+      <p class="text-sm font-semibold text-[#3B8DBF] mt-1">
+        Acompañamiento a personas mayores en Chile
+      </p>
+    </div>
+
+    <!-- Selector de Rol Funcionario / Administrador -->
+    <div class="grid grid-cols-2 p-1 bg-[#F4F8FB] rounded-2xl mb-6 border border-slate-200">
+      <button class="py-2.5 rounded-xl bg-[#0F3D6E] text-white font-bold text-xs shadow-sm flex items-center justify-center gap-1.5">
+        <span>🩺</span> Cuidador/a
+      </button>
+      <button class="py-2.5 rounded-xl text-[#0F3D6E]/70 hover:text-[#0F3D6E] font-bold text-xs flex items-center justify-center gap-1.5">
+        <span>⚙️</span> Administrador
+      </button>
+    </div>
+
+    <!-- Formulario -->
+    <form class="space-y-4">
+      
+      <div>
+        <label class="block text-xs font-black text-[#0F3D6E] uppercase mb-1.5">
+          Correo electrónico institucional
+        </label>
+        <div class="relative">
+          <input type="email" value="camila.valenzuela@valparaiso.cl" class="w-full pl-4 pr-10 py-3 rounded-2xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-[#0F3D6E] focus:outline-none">
+          <svg class="w-5 h-5 text-slate-400 absolute right-3.5 top-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206"/>
+          </svg>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="block text-xs font-black text-[#0F3D6E] uppercase">
+            Contraseña
+          </label>
+          <a href="#" class="text-xs font-bold text-[#3B8DBF] hover:underline">¿Olvidó su clave?</a>
+        </div>
+        <div class="relative">
+          <input type="password" value="••••••••••••" class="w-full pl-4 pr-10 py-3 rounded-2xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-[#0F3D6E] focus:outline-none">
+          <svg class="w-5 h-5 text-slate-400 absolute right-3.5 top-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Opción "Recordar este dispositivo" (exclusiva para rol de cuidador/a) -->
+      <div class="flex items-center justify-between pt-1">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked class="w-4 h-4 rounded accent-[#0F3D6E] cursor-pointer">
+          <span class="text-xs font-bold text-[#0F3D6E]">Recordar este dispositivo en mi turno</span>
+        </label>
+      </div>
+
+      <button type="button" class="w-full py-4 rounded-2xl bg-[#0F3D6E] text-white text-base font-black shadow-lg shadow-[#0F3D6E]/20 hover:bg-[#154d8a] transition-all mt-2">
+        Ingresar a Tu Cuidado
+      </button>
+
+    </form>
+
+    <!-- Nota Ética de Acceso -->
+    <div class="mt-6 pt-5 border-t border-slate-100 text-center">
+      <p class="text-xs text-[#0F3D6E]/70 font-semibold leading-relaxed">
+        Plataforma oficial de la Oficina Comunal del Adulto Mayor.<br>
+        <span class="text-[#3B8DBF]">La persona mayor no requiere ingresar credenciales ni contraseñas.</span>
+      </p>
+    </div>
+
+  </div>
+
+</body>
+</html>

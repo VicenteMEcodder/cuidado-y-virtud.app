@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Cuidado - Revisar Caso Rosa M.</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F4F8FB; color: #0F3D6E; }
+  </style>
+</head>
+<body class="min-h-screen flex bg-[#F4F8FB] overflow-hidden">
+
+  <!-- Fondo atenuado simulación vista anterior -->
+  <div class="flex-1 p-8 opacity-40 pointer-events-none filter blur-[1px]">
+    <div class="h-10 bg-white rounded-xl mb-6 w-1/3"></div>
+    <div class="grid grid-cols-3 gap-5 mb-8">
+      <div class="h-28 bg-white rounded-2xl"></div>
+      <div class="h-28 bg-white rounded-2xl"></div>
+      <div class="h-28 bg-white rounded-2xl"></div>
+    </div>
+    <div class="space-y-4">
+      <div class="h-24 bg-white rounded-2xl"></div>
+      <div class="h-24 bg-white rounded-2xl"></div>
+    </div>
+  </div>
+
+  <!-- Panel lateral modal de Revisar Caso -->
+  <aside class="w-[640px] bg-white border-l border-[#6FA0C8]/30 shadow-2xl flex flex-col h-screen overflow-y-auto">
+    
+    <!-- Encabezado del caso -->
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+      <div>
+        <div class="flex items-center gap-3">
+          <h2 class="text-2xl font-black text-[#0F3D6E]">Rosa M.</h2>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFEBEE] text-[#C62828] text-xs font-black border border-[#C62828]/40">
+            <span>⚠️</span> Revisar
+          </span>
+        </div>
+        <p class="text-sm font-semibold text-[#3B8DBF] mt-0.5">78 años • Cerro Alegre, Valparaíso</p>
+      </div>
+      <button class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Contenido del caso -->
+    <div class="p-6 space-y-6">
+      
+      <!-- Aviso Ético Fundamental -->
+      <div class="bg-[#E3EEF7] border border-[#3B8DBF]/40 rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-[#0F3D6E] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+          ⚖️
+        </div>
+        <div>
+          <p class="text-sm font-black text-[#0F3D6E]">La IA sugiere, usted decide</p>
+          <p class="text-xs text-[#0F3D6E]/80">Nunca se ejecutan llamadas ni derivaciones automáticas. Su criterio profesional es irremplazable.</p>
+        </div>
+      </div>
+
+      <!-- Señales que motivaron la alerta -->
+      <div class="bg-white border border-[#6FA0C8]/30 rounded-2xl p-5 shadow-sm">
+        <h3 class="text-base font-black text-[#0F3D6E] mb-3 flex items-center gap-2">
+          <span>🔍</span> Señales que motivaron la alerta
+        </h3>
+        <ul class="space-y-2 text-sm text-[#0F3D6E]">
+          <li class="flex items-start gap-2.5">
+            <span class="text-[#C62828] font-bold mt-0.5">•</span>
+            <span><strong>Aislamiento atípico:</strong> Lleva 5 días consecutivos sin registrar conversación social en su check-in habitual.</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-[#E6A100] font-bold mt-0.5">•</span>
+            <span><strong>Respuesta de ánimo:</strong> Marcó estado "Mal" hoy por primera vez en 4 meses.</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="text-[#3B8DBF] font-bold mt-0.5">•</span>
+            <span><strong>Respaldo de privacidad:</strong> No se graban audios ni transcripciones íntimas; solo patrones agregados de bienestar consentidos.</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Gráfico de Línea: Normalidad vs. Semana actual -->
+      <div class="bg-white border border-[#6FA0C8]/30 rounded-2xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-base font-black text-[#0F3D6E]">Rutina habitual vs. Semana actual</h3>
+          <div class="flex items-center gap-4 text-xs font-bold">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#6FA0C8]"></span> Normalidad histórica</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#C62828]"></span> Esta semana</span>
+          </div>
+        </div>
+        
+        <!-- SVG Chart -->
+        <div class="h-40 w-full bg-[#F8FAFC] rounded-xl p-3 flex flex-col justify-between">
+          <svg class="w-full h-28" viewBox="0 0 500 100" preserveAspectRatio="none">
+            <!-- Normalidad (línea azul punteada) -->
+            <polyline fill="none" stroke="#6FA0C8" stroke-width="2.5" stroke-dasharray="6,4" points="20,30 100,28 180,32 260,25 340,30 420,28 480,30"/>
+            <!-- Semana actual (línea roja con declive) -->
+            <polyline fill="none" stroke="#C62828" stroke-width="3.5" points="20,30 100,32 180,45 260,65 340,80 420,92 480,95"/>
+            <!-- Puntos -->
+            <circle cx="480" cy="95" r="5" fill="#C62828"/>
+          </svg>
+          <div class="flex justify-between text-[11px] font-bold text-[#0F3D6E]/60 pt-2 border-t border-slate-200">
+            <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Hoy (Dom)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado del Consentimiento -->
+      <div class="bg-white border border-[#6FA0C8]/30 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">🛡️</span>
+          <div>
+            <p class="text-sm font-bold text-[#0F3D6E]">Consentimiento explícito informado</p>
+            <p class="text-xs text-[#3B8DBF]">Autorizó que la cuidadora territorial vea su estado y contacte familia si requiere apoyo</p>
+          </div>
+        </div>
+        <span class="px-3 py-1 bg-[#E8F5E9] text-[#2E7D32] rounded-full text-xs font-black border border-[#2E7D32]/30">
+          Vigente
+        </span>
+      </div>
+
+      <!-- Punto de Decisión Humana (5 botones) -->
+      <div class="bg-white border-2 border-[#0F3D6E]/20 rounded-2xl p-5 shadow-sm space-y-4">
+        <h3 class="text-base font-black text-[#0F3D6E]">Punto de decisión humana</h3>
+        
+        <div class="grid grid-cols-2 gap-2.5">
+          <button class="py-2.5 px-3 rounded-xl border-2 border-slate-200 hover:border-slate-400 text-slate-700 font-bold text-xs text-left">
+            ✕ Descartar
+          </button>
+          <button class="py-2.5 px-3 rounded-xl border-2 border-slate-200 hover:border-[#E6A100] text-slate-700 font-bold text-xs text-left">
+            ⏳ Esperar y reevaluar
+          </button>
+          <button class="py-2.5 px-3 rounded-xl border-2 border-[#3B8DBF] bg-[#E3EEF7] text-[#0F3D6E] font-bold text-xs text-left">
+            📞 Llamar primero a la persona
+          </button>
+          <button class="py-2.5 px-3 rounded-xl border-2 border-[#0F3D6E] bg-[#0F3D6E] text-white font-bold text-xs text-left">
+            🚶 Visita presencial
+          </button>
+          <button class="col-span-2 py-2.5 px-3 rounded-xl border-2 border-[#E85D04] bg-[#FFF3E0] text-[#E85D04] font-bold text-xs text-left">
+            🤝 Derivar a red de apoyo (CESFAM / Vínculos)
+          </button>
+        </div>
+
+        <!-- Campo obligatorio de Justificación -->
+        <div class="pt-2">
+          <label class="block text-xs font-black text-[#0F3D6E] uppercase mb-1">
+            Justificación profesional obligatoria <span class="text-[#C62828]">*</span>
+          </label>
+          <textarea rows="3" placeholder="Escriba el motivo de la decisión tomada para el expediente comunitario..." class="w-full p-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F3D6E]"></textarea>
+        </div>
+
+        <!-- Mensaje de bloqueo si intenta sin justificar -->
+        <div class="bg-[#FFEBEE] border border-[#C62828]/30 rounded-xl p-3 flex items-center gap-2.5 text-[#C62828] text-xs font-bold">
+          <span>🔒</span>
+          <span>Ninguna acción se envía sin su decisión y justificación explícita.</span>
+        </div>
+
+        <button class="w-full py-3.5 rounded-xl bg-[#0F3D6E] text-white font-black text-sm shadow-md hover:bg-[#154d8a] transition-colors">
+          Confirmar y Registrar Decisión
+        </button>
+      </div>
+
+      <!-- Bitácora de Decisiones -->
+      <div class="bg-white border border-[#6FA0C8]/30 rounded-2xl p-5 shadow-sm">
+        <h3 class="text-base font-black text-[#0F3D6E] mb-3 flex items-center gap-2">
+          <span>📋</span> Bitácora histórica de intervenciones
+        </h3>
+        <div class="space-y-3 text-xs text-[#0F3D6E]">
+          <div class="border-l-2 border-[#3B8DBF] pl-3 py-1">
+            <p class="font-bold">Llamada telefónica preventiva de saludo</p>
+            <p class="text-[#0F3D6E]/70">Decidido por: Camila Valenzuela (Cuidadora) • 12 Octubre, 11:20</p>
+            <p class="italic mt-0.5 text-slate-600">"Rosa agradeció el contacto, refirió resfrío leve en remisión."</p>
+          </div>
+          <div class="border-l-2 border-[#2E7D32] pl-3 py-1">
+            <p class="font-bold">Actualización de consentimiento presencial</p>
+            <p class="text-[#0F3D6E]/70">Registrado por: Roberto Bravo (Oficina Adulto Mayor) • 01 Septiembre</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+</body>
+</html>
