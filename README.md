@@ -12,13 +12,9 @@ Prototipo del **Equipo 19** para la *Hackathon de Inteligencia Artificial Aplica
 
 **Equipo 19** — Hackathon de IA Aplicada · Congreso Social UC 2026.
 
-| Nombre | Rol |
-|---|---|
-| _(completar)_ | _(completar)_ |
-| _(completar)_ | _(completar)_ |
-| _(completar)_ | _(completar)_ |
-| _(completar)_ | _(completar)_ |
-| _(completar)_ | _(completar)_ |
+- Rodrigo Mella
+- Vicente Milla
+- Joaquín Nieto
 
 ## El problema
 
