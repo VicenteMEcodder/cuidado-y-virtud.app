@@ -1,4 +1,4 @@
-package com.example.cuidadoyvirtudapp.ui
+package com.example.cuidadoyvirtudapp.ui.screen
 
 import android.Manifest
 import android.content.Intent
@@ -21,7 +21,14 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,6 +76,7 @@ import com.example.cuidadoyvirtudapp.R
 import com.example.cuidadoyvirtudapp.data.PersonaPub
 import com.example.cuidadoyvirtudapp.data.Repo
 import com.example.cuidadoyvirtudapp.domain.Social
+import com.example.cuidadoyvirtudapp.ui.components.*
 import com.example.cuidadoyvirtudapp.ui.theme.*
 import kotlinx.coroutines.delay
 import java.util.Locale
@@ -94,6 +102,38 @@ private val PREGUNTAS = listOf(
         Opcion("no_tomo", "⏳", "Todavía no", listOf("no", "todavía", "todavia", "aún", "aun")))),
 )
 
+// Recorridos de seguimiento: preguntas extra según lo que respondió. Todas opcionales y con "no, gracias".
+private data class OpcionSeg(val valor: String, val emoji: String, val texto: String, val claves: List<String>)
+private data class Seguimiento(val clave: String, val voz: String, val titulo: String, val opciones: List<OpcionSeg>)
+
+private val SEG_CONTACTO = Seguimiento("contacto", "Hoy no habló con nadie. ¿Le gustaría hablar con alguien?", "¿Le gustaría hablar con alguien?", listOf(
+    OpcionSeg("familia", "👪", "Mi familia", listOf("familia", "hijo", "hija", "nieto", "nieta")),
+    OpcionSeg("equipo", "🧑‍⚕️", "Alguien del equipo", listOf("equipo", "cuidador", "cuidadora", "funcionario", "funcionaria")),
+    OpcionSeg("programa", "🌸", "Otra persona del programa", listOf("programa", "otra persona", "persona", "vecino", "vecina")),
+    OpcionSeg("nada", "🙂", "No, estoy bien así", listOf("no", "bien", "tranquilo", "tranquila", "gracias"))))
+private val SEG_ACTIVIDADES = Seguimiento("actividades", "¿Necesita ayuda con algo?", "¿Necesita ayuda con algo?", listOf(
+    OpcionSeg("compras", "🛒", "Con las compras", listOf("compras", "mercado", "feria", "supermercado")),
+    OpcionSeg("comida", "🍲", "Con la comida", listOf("comida", "cocinar", "almuerzo", "once")),
+    OpcionSeg("aseo", "🧼", "Con el aseo", listOf("aseo", "limpiar", "limpieza", "baño", "ducha")),
+    OpcionSeg("moverse", "🚶", "Para moverme o hacer trámites", listOf("moverme", "caminar", "salir", "trámite", "trámites", "tramite", "tramites")),
+    OpcionSeg("nada", "🙂", "No, gracias", listOf("no", "nada", "gracias"))))
+private val SEG_MEDICACION = Seguimiento("medicacion", "¿Quiere contarme por qué no los tomó todavía?", "¿Por qué no los tomó todavía?", listOf(
+    OpcionSeg("olvido", "🤔", "Se me olvidó", listOf("olvidé", "olvide", "olvidó", "olvido", "olvidaron", "olvidar")),
+    OpcionSeg("sin_remedios", "📦", "No me quedan", listOf("quedan", "acabaron", "terminaron", "tengo")),
+    OpcionSeg("me_caen_mal", "🤢", "Me caen mal", listOf("caen", "mal", "molestan", "molesta")),
+    OpcionSeg("nada", "🙂", "Prefiero no decir", listOf("prefiero", "no", "nada"))))
+
+private fun interpretarSeg(frases: List<String>, opciones: List<OpcionSeg>): String? {
+    for (frase in frases) {
+        val t = frase.lowercase(Locale.ROOT)
+        val palabras = t.split(Regex("[^\\p{L}]+")).filter { it.isNotEmpty() }.toSet()
+        val mejor = opciones.map { o -> o to (o.claves.filter { k -> if (k.contains(' ')) t.contains(k) else k in palabras }.maxOfOrNull { it.length } ?: 0) }
+            .filter { it.second > 0 }.maxByOrNull { it.second }
+        if (mejor != null) return mejor.first.valor
+    }
+    return null
+}
+
 /** Colores de los botones de respuesta: verde = bien, amarillo = a medias, rojo rosado = mal, gris azulado = neutro. */
 private fun colorRespuesta(campo: String, valor: String): Pair<Color, Color> = when {
     campo == "contacto" && valor == "no" -> GrisAzul to Color.White
@@ -114,9 +154,30 @@ private fun interpretar(frases: List<String>, q: Pregunta): String? {
     return null
 }
 
+/** Saludo según la hora del día (antes decía siempre "Buenos días"). */
+private fun momentoDelDia(): Pair<String, String> {
+    val h = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+    return when { h < 12 -> "Buenos días" to "☀️"; h < 20 -> "Buenas tardes" to "🌤️"; else -> "Buenas noches" to "🌙" }
+}
+
+/**
+ * Pantalla de la persona mayor. El botón "Aa" cambia el tamaño de TODA la letra (normal, grande, muy grande)
+ * sin tocar la configuración del teléfono.
+ */
 @Composable
 fun MayorScreen(onSalir: () -> Unit) {
+    var escala by remember { mutableIntStateOf(0) }
+    val d = LocalDensity.current
+    val mult = listOf(1f, 1.25f, 1.5f)[escala]
+    CompositionLocalProvider(LocalDensity provides Density(d.density, d.fontScale * mult)) {
+        MayorContenido(onSalir, escala) { escala = (escala + 1) % 3 }
+    }
+}
+
+@Composable
+private fun MayorContenido(onSalir: () -> Unit, escala: Int, onEscala: () -> Unit) {
     val ctx = LocalContext.current
+    val (saludoHora, iconoHora) = remember { momentoDelDia() }
     val persona = remember { Repo.personaDemo() }
     val preguntas = remember { PREGUNTAS.filter { !it.soloCronico || persona.medCronica } }
     var fase by remember { mutableStateOf("preguntas") } // preguntas | gracias | sos | compartir
@@ -131,15 +192,21 @@ fun MayorScreen(onSalir: () -> Unit) {
     var textoPorque by remember { mutableStateOf("") }
     var candidato by remember { mutableStateOf<PersonaPub?>(null) }
     var socialMsg by remember { mutableStateOf<String?>(null) }
+    var seg by remember { mutableStateOf<Seguimiento?>(null) }
+    var quiereCompania by remember { mutableStateOf(false) }
     val pausado = remember(Repo.version) { Repo.leerConsentimiento(persona.id).vigente.not() }
     val manejador = remember { Handler(Looper.getMainLooper()) }
+    // Avisos de la agenda (remedios, citas): aparecen cuando llega la hora que fijó el funcionario, si la persona los aceptó.
+    var tick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) { while (true) { delay(15_000); tick++ } }
+    val aviso = remember(Repo.version, tick) { Repo.avisoPendiente(persona.id) }
 
     var permiso by remember { mutableStateOf(ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) }
     val reconocedor = remember { if (SpeechRecognizer.isRecognitionAvailable(ctx)) SpeechRecognizer.createSpeechRecognizer(ctx) else null }
 
     fun escuchar() {
         val r = reconocedor ?: return
-        if (!permiso || (fase != "preguntas" && fase != "porque") || pausado) return
+        if (!permiso || fase !in listOf("preguntas", "porque", "seguimiento") || pausado) return
         try {
             r.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -153,8 +220,8 @@ fun MayorScreen(onSalir: () -> Unit) {
         reconocedor?.cancel(); escuchando = false
         if (!omitir) Repo.registrarCheckin(persona.id, canal, respuestas["animo"], respuestas["contacto"], respuestas["actividades"], respuestas["medicacion"])
         sinResponder = omitir
-        // Si hoy no habló con nadie, se le sugiere (con su permiso) conocer a otra persona del programa que también quiere compañía.
-        if (!omitir && respuestas["contacto"] == "no") {
+        // Solo si ELLA eligió "otra persona del programa" se le sugiere a alguien que también quiere compañía.
+        if (!omitir && quiereCompania) {
             val c = Repo.candidatoSocial(persona.id)
             if (c != null) { candidato = c; fase = "social"; return }
         }
@@ -168,8 +235,26 @@ fun MayorScreen(onSalir: () -> Unit) {
         reconocedor?.cancel(); escuchando = false
         respuestas[preguntas[paso].campo] = valor
         if (via == "voz") canal = "voz"
-        // Respuestas distintas llevan a preguntas distintas: si no se siente bien, se le pregunta (opcionalmente) por qué.
-        if (preguntas[paso].campo == "animo" && (valor == "regular" || valor == "mal")) { ayuda = ""; intentos = 0; fase = "porque" } else avanzar()
+        // Respuestas distintas llevan a preguntas distintas (siempre opcionales).
+        val campo = preguntas[paso].campo
+        ayuda = ""; intentos = 0
+        when {
+            campo == "animo" && (valor == "regular" || valor == "mal") -> fase = "porque"
+            campo == "contacto" && valor == "no" -> { seg = SEG_CONTACTO; fase = "seguimiento" }
+            campo == "actividades" && (valor == "parcial" || valor == "no") -> { seg = SEG_ACTIVIDADES; fase = "seguimiento" }
+            campo == "medicacion" && valor == "no_tomo" -> { seg = SEG_MEDICACION; fase = "seguimiento" }
+            else -> avanzar()
+        }
+    }
+    fun elegirSeg(valor: String) {
+        reconocedor?.cancel(); escuchando = false
+        val s = seg ?: return
+        when ("${s.clave}/$valor") {
+            "contacto/equipo" -> Repo.pedirLlamada(persona.id)   // crea una alerta para un humano; no llama a nadie
+            "contacto/programa" -> quiereCompania = true         // la sugerencia aparece al final
+            else -> Social.categoriaSeguimiento(s.clave, valor)?.let { Repo.guardarNota(persona.id, "opcion", it, "") }
+        }
+        avanzar()
     }
 
     val pedirPermiso = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
@@ -194,6 +279,16 @@ fun MayorScreen(onSalir: () -> Unit) {
                     if (frases.isNotEmpty() && frases[0].isNotBlank()) { textoPorque = frases[0]; ayuda = ""; fase = "nota" } else reintentar()
                     return
                 }
+                if (fase == "seguimiento") {
+                    val s = seg
+                    val vs = if (s != null && frases.isNotEmpty()) interpretarSeg(frases, s.opciones) else null
+                    if (vs != null) {
+                        val actual = paso
+                        ayuda = "Le entendí: “${frases[0]}”"
+                        manejador.postDelayed({ if (paso == actual && fase == "seguimiento") elegirSeg(vs) }, 700)
+                    } else reintentar()
+                    return
+                }
                 val v = if (frases.isNotEmpty()) interpretar(frases, preguntas[paso]) else null
                 if (v != null) {
                     val actual = paso
@@ -210,7 +305,7 @@ fun MayorScreen(onSalir: () -> Unit) {
                 if (intentos < 1) {
                     intentos++; ayuda = "¿Me lo repite, por favor?"
                     val actual = paso
-                    manejador.postDelayed({ if (paso == actual && (fase == "preguntas" || fase == "porque")) escuchar() }, 800)
+                    manejador.postDelayed({ if (paso == actual && (fase == "preguntas" || fase == "porque" || fase == "seguimiento")) escuchar() }, 800)
                 } else ayuda = "No le entendí. Puede usar los botones 👇"
             }
         })
@@ -226,23 +321,43 @@ fun MayorScreen(onSalir: () -> Unit) {
             tts.language = Locale.forLanguageTag("es-CL")
             tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onStart(id: String?) {}
-                override fun onError(id: String?) { manejador.post { if (id == "q$paso" || id == "p$paso") escuchar() } }
-                override fun onDone(id: String?) { manejador.post { if ((id == "q$paso" && fase == "preguntas") || (id == "p$paso" && fase == "porque")) escuchar() } }
+                override fun onError(id: String?) { manejador.post { if (id == "q$paso" || id == "p$paso" || id == "g$paso") escuchar() } }
+                override fun onDone(id: String?) { manejador.post { if ((id == "q$paso" && fase == "preguntas") || (id == "p$paso" && fase == "porque") || (id == "g$paso" && fase == "seguimiento")) escuchar() } }
             })
         }
     }
     LaunchedEffect(Unit) { if (!permiso) pedirPermiso.launch(Manifest.permission.RECORD_AUDIO) }
     LaunchedEffect(paso, ttsListo, fase) {
-        if (pausado || fase !in listOf("preguntas", "porque", "social")) return@LaunchedEffect
+        if (pausado || fase !in listOf("preguntas", "porque", "seguimiento", "social")) return@LaunchedEffect
         reconocedor?.cancel(); escuchando = false
         val texto = when (fase) {
-            "preguntas" -> (if (paso == 0) "Buenos días, ${persona.saludo}. " else "") + preguntas[paso].texto
+            "preguntas" -> (if (paso == 0) "$saludoHora, ${persona.saludo}. " else "") + preguntas[paso].texto
             "porque" -> "Gracias por contarme. Si quiere, dígame por qué. Puede decirlo con sus palabras."
+            "seguimiento" -> seg?.voz ?: return@LaunchedEffect
             else -> "Hoy también hay otra persona que quiere conversar. ¿Le gustaría conocerla?"
         }
-        val id = when (fase) { "preguntas" -> "q$paso"; "porque" -> "p$paso"; else -> "s" }
+        val id = when (fase) { "preguntas" -> "q$paso"; "porque" -> "p$paso"; "seguimiento" -> "g$paso"; else -> "s" }
         if (ttsListo) tts.speak(texto, TextToSpeech.QUEUE_FLUSH, null, id)
         else if (fase != "social") { delay(2500); if (!ttsListo) escuchar() } // sin voz del sistema: igual se activa el micrófono
+    }
+
+    LaunchedEffect(aviso?.id, ttsListo) {
+        if (aviso != null && ttsListo) { reconocedor?.cancel(); escuchando = false; tts.speak(com.example.cuidadoyvirtudapp.domain.Agenda.textoAviso(aviso.tipo, aviso.titulo), TextToSpeech.QUEUE_FLUSH, null, "aviso") }
+    }
+    if (aviso != null) {
+        val (icono, _) = com.example.cuidadoyvirtudapp.domain.Agenda.TIPOS[aviso.tipo] ?: ("📝" to "Otro")
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("⏰ $icono ${com.example.cuidadoyvirtudapp.domain.Agenda.textoAviso(aviso.tipo, aviso.titulo)}", fontSize = 28.sp, lineHeight = 34.sp, fontWeight = FontWeight.Black, color = Marino) },
+            text = { Text("Su cuidador lo programó para las ${aviso.hora}.", fontSize = 19.sp, color = Marino) },
+            confirmButton = {
+                Box(Modifier.background(VerdeVivo, RoundedCornerShape(18.dp)).clickable { tts.stop(); Repo.responderAviso(aviso, true) }.padding(horizontal = 22.dp, vertical = 16.dp)) {
+                    Text("✅ Ya lo hice", fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color.White)
+                }
+            },
+            dismissButton = { Box(Modifier.clickable { tts.stop(); Repo.responderAviso(aviso, false) }.padding(12.dp)) { Text("Lo veo después", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Marino) } },
+            containerColor = Color.White,
+        )
     }
 
     fun tocarMicrofono() {
@@ -260,6 +375,10 @@ fun MayorScreen(onSalir: () -> Unit) {
                 Box(Modifier.background(Color.White, RoundedCornerShape(16.dp)).padding(horizontal = 8.dp, vertical = 4.dp)) { Image(painterResource(R.drawable.logo), "Logo", Modifier.height(44.dp)) }
                 Spacer(Modifier.size(10.dp))
                 Text("Tu Cuidado", fontSize = 22.sp, fontWeight = FontWeight.Black, color = Marino, modifier = Modifier.weight(1f))
+                // Tamaño de letra: A (normal) → A+ (grande) → A++ (muy grande)
+                Text(listOf("Aa", "Aa+", "Aa++")[escala], fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color.White,
+                    modifier = Modifier.background(Turquesa, RoundedCornerShape(50)).clickable(onClick = onEscala).padding(horizontal = 14.dp, vertical = 8.dp))
+                Spacer(Modifier.size(8.dp))
                 Text("Salir", color = Marino, fontWeight = FontWeight.Bold, fontSize = 16.sp, textDecoration = TextDecoration.Underline,
                     modifier = Modifier.clickable { tts.stop(); reconocedor?.cancel(); onSalir() }.padding(8.dp))
             }
@@ -271,6 +390,7 @@ fun MayorScreen(onSalir: () -> Unit) {
                     fase == "porque" -> PantallaPorque(escuchando, ayuda, ::tocarMicrofono,
                         onOpcion = { cat -> Repo.guardarNota(persona.id, "opcion", cat, ""); reconocedor?.cancel(); tts.stop(); avanzar() },
                         onNo = { reconocedor?.cancel(); tts.stop(); avanzar() })
+                    fase == "seguimiento" && seg != null -> PantallaSeguimiento(seg!!, escuchando, ayuda, ::tocarMicrofono, onElegir = { elegirSeg(it) })
                     fase == "nota" -> PantallaNota(textoPorque,
                         onSi = { Repo.guardarNota(persona.id, "voz", Social.categoria(textoPorque), textoPorque); avanzar() },
                         onOtra = { fase = "porque" }, onNo = { avanzar() })
@@ -293,16 +413,28 @@ fun MayorScreen(onSalir: () -> Unit) {
                         Spacer(Modifier.height(6.dp))
                         Banner(colores = listOf(Marino, AzulMedio)) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                                if (paso == 0) Text("☀️ Buenos días, ${persona.saludo}", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFE08A), textAlign = TextAlign.Center)
+                                if (paso == 0) Text("$iconoHora $saludoHora, ${persona.saludo}", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFE08A), textAlign = TextAlign.Center)
                                 Spacer(Modifier.height(6.dp))
                                 Text(q.texto, fontSize = 34.sp, lineHeight = 40.sp, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)
                             }
                         }
-                        Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(8.dp))
+                        // Progreso: cuántas preguntas van y cuántas faltan
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            preguntas.indices.forEach { i ->
+                                Box(Modifier.size(if (i == paso) 16.dp else 12.dp).background(if (i <= paso) Turquesa else Color.White, CircleShape).border(2.dp, Turquesa, CircleShape))
+                            }
+                            Spacer(Modifier.size(4.dp))
+                            Text("${paso + 1} de ${preguntas.size}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Marino.copy(alpha = .8f))
+                        }
+                        Spacer(Modifier.height(6.dp))
                         Microfono(escuchando, ::tocarMicrofono)
                         Box(Modifier.height(40.dp), contentAlignment = Alignment.Center) {
                             Text(ayuda, fontSize = 17.sp, color = Marino, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
                         }
+                        Text("🔊 Repetir la pregunta", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = AzulMedio,
+                            modifier = Modifier.background(Color.White.copy(alpha = .85f), RoundedCornerShape(50)).clickable { reconocedor?.cancel(); escuchando = false; tts.speak(q.texto, TextToSpeech.QUEUE_FLUSH, null, "q$paso") }.padding(horizontal = 16.dp, vertical = 8.dp))
+                        Spacer(Modifier.height(10.dp))
                         q.opciones.forEach { o ->
                             val (bg, fg) = colorRespuesta(q.campo, o.valor)
                             BotonColor(o.emoji, o.texto, bg, fg) { responder(o.valor, "botones") }
@@ -355,13 +487,19 @@ private fun Microfono(escuchando: Boolean, onClick: () -> Unit) {
     }
 }
 
+/** Botón grande con sombra y un "hundimiento" al tocarlo, para que se sienta que respondió. */
 @Composable
 private fun BotonColor(emoji: String, texto: String, fondo: Color, letra: Color, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().background(fondo, RoundedCornerShape(26.dp)).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(56.dp).background(Color.White.copy(alpha = .95f), CircleShape), contentAlignment = Alignment.Center) { Text(emoji, fontSize = 32.sp) }
-        Spacer(Modifier.size(16.dp))
-        Text(texto, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = letra)
+    val fuente = remember { MutableInteractionSource() }
+    val presionado by fuente.collectIsPressedAsState()
+    val escala by animateFloatAsState(if (presionado) 0.95f else 1f, label = "boton")
+    Surface(Modifier.fillMaxWidth().scale(escala).clickable(interactionSource = fuente, indication = null, onClick = onClick),
+        shape = RoundedCornerShape(26.dp), color = fondo, shadowElevation = 6.dp) {
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(58.dp).background(Color.White.copy(alpha = .95f), CircleShape), contentAlignment = Alignment.Center) { Text(emoji, fontSize = 33.sp) }
+            Spacer(Modifier.size(16.dp))
+            Text(texto, fontSize = 28.sp, lineHeight = 32.sp, fontWeight = FontWeight.ExtraBold, color = letra, modifier = Modifier.weight(1f))
+        }
     }
 }
 
@@ -392,6 +530,28 @@ private fun PantallaPorque(escuchando: Boolean, ayuda: String, onMic: () -> Unit
         Spacer(Modifier.height(10.dp))
     }
     Text("Prefiero no contar", fontSize = 22.sp, color = Marino, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline, modifier = Modifier.clickable(onClick = onNo).padding(12.dp))
+}
+
+@Composable
+private fun PantallaSeguimiento(s: Seguimiento, escuchando: Boolean, ayuda: String, onMic: () -> Unit, onElegir: (String) -> Unit) {
+    Spacer(Modifier.height(6.dp))
+    Banner(colores = listOf(Turquesa, AzulMedio)) {
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Gracias por contarme 💛", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFE08A), textAlign = TextAlign.Center)
+            Spacer(Modifier.height(4.dp))
+            Text(s.titulo, fontSize = 30.sp, lineHeight = 36.sp, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+    Microfono(escuchando, onMic)
+    Box(Modifier.height(36.dp), contentAlignment = Alignment.Center) { Text(ayuda.ifEmpty { "Hable, o elija una opción 👇" }, fontSize = 17.sp, color = Marino, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center) }
+    val colores = listOf(VerdeVivo, AzulMedio, Lila, Turquesa, GrisAzul)
+    s.opciones.forEachIndexed { i, o ->
+        val ultima = o.valor == "nada"
+        BotonColor(o.emoji, o.texto, if (ultima) GrisAzul else colores[i % (colores.size - 1)], Color.White) { onElegir(o.valor) }
+        Spacer(Modifier.height(10.dp))
+    }
+    Text("Solo se lo contamos a su cuidador si usted lo elige.", fontSize = 15.sp, color = Marino.copy(alpha = .75f), fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
 }
 
 @Composable
@@ -471,6 +631,9 @@ private fun Compartir(pid: String, onListo: () -> Unit) {
     var familia by remember { mutableStateOf(actual.avisarFamilia) }
     var pausa by remember { mutableStateOf(!actual.vigente) }
     var conocer by remember { mutableStateOf(actual.socializar) }
+    var recordar by remember { mutableStateOf(actual.recordatorios) }
+    val permisoAvisos = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    val ctxCompartir = LocalContext.current
     Banner(colores = listOf(Turquesa, AzulMedio)) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Text("¿Qué quiere compartir?", fontSize = 32.sp, fontWeight = FontWeight.Black, color = Color.White, textAlign = TextAlign.Center)
@@ -480,6 +643,7 @@ private fun Compartir(pid: String, onListo: () -> Unit) {
     Spacer(Modifier.height(12.dp))
     FilaSwitch("🧑‍⚕️", "Que mi cuidador vea cómo estoy", Cielo, comparte) { comparte = it }
     FilaSwitch("👨‍👩‍👧", "Que avisen a mi familia si lo necesito", Durazno, familia) { familia = it }
+    FilaSwitch("⏰", "Que mi cuidador me recuerde mis remedios y citas", Color(0xFFFFE9A8), recordar) { recordar = it }
     FilaSwitch("🌸", "Que me presenten a otras personas del programa para conversar", Color(0xFFEADCF8), conocer) { conocer = it }
     FilaSwitch("⏸️", "Pausar el acompañamiento por hoy", Menta, pausa) { pausa = it }
     Spacer(Modifier.height(6.dp))
@@ -513,7 +677,11 @@ private fun Compartir(pid: String, onListo: () -> Unit) {
         )
     }
     Spacer(Modifier.height(10.dp))
-    Box(Modifier.fillMaxWidth().background(VerdeVivo, RoundedCornerShape(26.dp)).clickable { Repo.guardarConsentimiento(pid, comparte, familia, pausa, conocer); onListo() }.padding(vertical = 18.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxWidth().background(VerdeVivo, RoundedCornerShape(26.dp)).clickable {
+        if (recordar && android.os.Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(ctxCompartir, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+            permisoAvisos.launch(Manifest.permission.POST_NOTIFICATIONS)
+        Repo.guardarConsentimiento(pid, comparte, familia, pausa, conocer, recordar); onListo()
+    }.padding(vertical = 18.dp), contentAlignment = Alignment.Center) {
         Text("Listo", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
     }
 }

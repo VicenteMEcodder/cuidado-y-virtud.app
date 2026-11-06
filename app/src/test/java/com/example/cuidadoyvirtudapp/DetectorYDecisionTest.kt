@@ -131,6 +131,39 @@ class DetectorYDecisionTest {
         assertEquals("2026-11-21T10:30:00", R.venceEl("2026-11-06T10:30:00"))
     }
 
+    @Test fun laAgendaCalculaLaProximaHoraDelAviso() {
+        val A = com.example.cuidadoyvirtudapp.domain.Agenda
+        val c = java.util.Calendar.getInstance().apply { set(2026, 10, 6, 10, 0, 0); set(java.util.Calendar.MILLISECOND, 0) }
+        assertEquals(30 * 60 * 1000L, A.proximaMillis("10:30", "diaria", null, c)!! - c.timeInMillis)          // más tarde hoy
+        assertEquals(22 * 60 * 60 * 1000L, A.proximaMillis("08:00", "diaria", null, c)!! - c.timeInMillis)     // ya pasó: mañana
+        assertEquals(null, A.proximaMillis("08:00", "una_vez", "2026-11-06", c))                                // una vez y ya pasó
+        assertTrue(A.proximaMillis("11:00", "una_vez", "2026-11-06", c)!! > c.timeInMillis)
+        assertEquals(null, A.proximaMillis("11:00", "una_vez", null, c))
+    }
+
+    @Test fun laAgendaValidaHorasYMomentoDelAviso() {
+        val A = com.example.cuidadoyvirtudapp.domain.Agenda
+        for (h in listOf("08:05", "00:00", "23:59")) assertTrue(h, A.horaValida(h))
+        for (h in listOf("8:5", "24:00", "12:60", "", "ab:cd")) assertFalse(h, A.horaValida(h))
+        fun a(hh: Int, mm: Int) = java.util.Calendar.getInstance().apply { set(2026, 10, 6, hh, mm, 0) }
+        assertTrue(A.esDebido("10:00", a(10, 0))); assertTrue(A.esDebido("10:00", a(10, 2)))
+        assertFalse(A.esDebido("10:00", a(10, 3))); assertFalse(A.esDebido("10:00", a(9, 59)))
+        assertTrue(A.textoAviso("remedio", "Pastilla de la presión").contains("Pastilla de la presión"))
+    }
+
+    @Test fun losRecorridosDeSeguimientoSoloAnotanLoQueLaPersonaEligio() {
+        val S = com.example.cuidadoyvirtudapp.domain.Social
+        assertEquals("Necesita ayuda con las compras", S.categoriaSeguimiento("actividades", "compras"))
+        assertEquals("Remedios: se le olvidó", S.categoriaSeguimiento("medicacion", "olvido"))
+        assertEquals("Quiere hablar con su familia", S.categoriaSeguimiento("contacto", "familia"))
+        // "no, gracias" no anota nada; "equipo" y "programa" no son notas: son otras acciones (llamada y compañía)
+        assertEquals(null, S.categoriaSeguimiento("actividades", "nada"))
+        assertEquals(null, S.categoriaSeguimiento("contacto", "nada"))
+        assertEquals(null, S.categoriaSeguimiento("contacto", "equipo"))
+        assertEquals(null, S.categoriaSeguimiento("contacto", "programa"))
+        assertEquals(null, S.categoriaSeguimiento("medicacion", "nada"))
+    }
+
     @Test fun elMensajeDeDerivacionNoTieneVariablesDeSalud() {
         val m = Workflow.mensajeMinimo("Pedro").lowercase()
         for (p in listOf("ánimo", "animo", "remedio", "medic", "mal", "deterioro", "aislamiento")) assertFalse("contiene '$p'", m.contains(p))

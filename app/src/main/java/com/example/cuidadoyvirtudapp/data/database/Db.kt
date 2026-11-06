@@ -1,4 +1,4 @@
-package com.example.cuidadoyvirtudapp.data
+package com.example.cuidadoyvirtudapp.data.database
 
 import android.content.ContentValues
 import android.content.Context
@@ -13,7 +13,7 @@ import com.example.cuidadoyvirtudapp.domain.Series
  * SQLite local con datos 100 % SINTÉTICOS precargados desde los CSV de la carpeta assets.
  * Garantía en la base de datos: un trigger impide insertar derivaciones si la alerta no está APROBADA.
  */
-class Db(private val ctx: Context) : SQLiteOpenHelper(ctx, "tucuidado.db", null, 2) {
+class Db(private val ctx: Context) : SQLiteOpenHelper(ctx, "tucuidado.db", null, 3) {
 
     override fun onConfigure(db: SQLiteDatabase) {
         super.onConfigure(db)
@@ -31,6 +31,27 @@ class Db(private val ctx: Context) : SQLiteOpenHelper(ctx, "tucuidado.db", null,
             db.execSQL("UPDATE consentimientos SET socializar = CASE WHEN rowid % 2 = 1 THEN 1 ELSE 0 END")
             crearTablasSocial(db)
         }
+        if (o < 3) {
+            db.execSQL("ALTER TABLE consentimientos ADD COLUMN recordatorios INTEGER NOT NULL DEFAULT 0")
+            crearTablasAgenda(db)
+        }
+    }
+
+    /**
+     * Agenda de cada persona (remedios, citas, llamadas). Garantías: (1) el administrador debe habilitarla tras una solicitud
+     * escrita del cuidador, y lo hace cumplir un trigger; (2) los avisos solo se entregan si la persona lo aceptó.
+     */
+    private fun crearTablasAgenda(db: SQLiteDatabase) {
+        db.execSQL("""CREATE TABLE IF NOT EXISTS agenda_solicitudes (id INTEGER PRIMARY KEY AUTOINCREMENT, persona_id TEXT NOT NULL,
+            solicitante TEXT NOT NULL, motivo TEXT NOT NULL CHECK(length(motivo) >= 10), estado TEXT NOT NULL, ts TEXT NOT NULL,
+            admin TEXT, resuelto_ts TEXT)""")
+        db.execSQL("""CREATE TABLE IF NOT EXISTS agenda_eventos (id INTEGER PRIMARY KEY AUTOINCREMENT, persona_id TEXT NOT NULL,
+            titulo TEXT NOT NULL, tipo TEXT NOT NULL, hora TEXT NOT NULL, repeticion TEXT NOT NULL, fecha TEXT, creado_por TEXT NOT NULL, ts TEXT NOT NULL)""")
+        db.execSQL("""CREATE TABLE IF NOT EXISTS recordatorios_log (id INTEGER PRIMARY KEY AUTOINCREMENT, evento_id INTEGER NOT NULL,
+            fecha TEXT NOT NULL, estado TEXT NOT NULL, ts TEXT NOT NULL)""")
+        db.execSQL("""CREATE TRIGGER IF NOT EXISTS agenda_requiere_habilitacion BEFORE INSERT ON agenda_eventos
+            WHEN (SELECT COUNT(*) FROM agenda_solicitudes WHERE persona_id = NEW.persona_id AND estado = 'HABILITADA') = 0
+            BEGIN SELECT RAISE(ABORT, 'BLOQUEADO: el administrador no ha habilitado la agenda de esta persona'); END""")
     }
 
     /** Notas que la persona decide anotar en su ficha, y propuestas de compañía entre personas (siempre con revisión humana). */
@@ -53,7 +74,7 @@ class Db(private val ctx: Context) : SQLiteOpenHelper(ctx, "tucuidado.db", null,
             "CREATE TABLE etiquetas (persona_id TEXT PRIMARY KEY, escenario TEXT, riesgo INTEGER)",
             """CREATE TABLE consentimientos (persona_id TEXT PRIMARY KEY, comparte INTEGER NOT NULL,
                avisar_familia INTEGER NOT NULL DEFAULT 0, pausado INTEGER NOT NULL DEFAULT 0, ts TEXT NOT NULL,
-               socializar INTEGER NOT NULL DEFAULT 0)""",
+               socializar INTEGER NOT NULL DEFAULT 0, recordatorios INTEGER NOT NULL DEFAULT 0)""",
             """CREATE TABLE alertas (id INTEGER PRIMARY KEY AUTOINCREMENT, persona_id TEXT NOT NULL, creada TEXT NOT NULL,
                origen TEXT NOT NULL, nivel TEXT NOT NULL, score REAL, senales TEXT NOT NULL, explicacion TEXT NOT NULL,
                estado TEXT NOT NULL)""",
@@ -72,6 +93,7 @@ class Db(private val ctx: Context) : SQLiteOpenHelper(ctx, "tucuidado.db", null,
                BEGIN SELECT RAISE(ABORT, 'BLOQUEADO: la alerta no tiene aprobación humana'); END""",
         ).forEach { db.execSQL(it) }
         crearTablasSocial(db)
+        crearTablasAgenda(db)
     }
 
     private fun filas(nombre: String): List<List<String>> =
@@ -123,7 +145,7 @@ class Db(private val ctx: Context) : SQLiteOpenHelper(ctx, "tucuidado.db", null,
     fun reiniciarDemo(db: SQLiteDatabase) {
         db.beginTransaction()
         try {
-            listOf("derivaciones", "decisiones", "alertas", "bitacora", "checkins_vivo", "notas_ficha", "encuentros", "consentimientos").forEach { db.execSQL("DELETE FROM $it") }
+            listOf("derivaciones", "decisiones", "alertas", "bitacora", "checkins_vivo", "notas_ficha", "encuentros", "agenda_eventos", "agenda_solicitudes", "recordatorios_log", "consentimientos").forEach { db.execSQL("DELETE FROM $it") }
             db.execSQL("DELETE FROM sqlite_sequence")
             db.execSQL("""INSERT INTO consentimientos(persona_id, comparte, avisar_familia, pausado, ts, socializar)
                 SELECT persona_id, comparte_inicial, 0, CASE consent_inicial WHEN 'pausado' THEN 1 ELSE 0 END, '${ahora()}',

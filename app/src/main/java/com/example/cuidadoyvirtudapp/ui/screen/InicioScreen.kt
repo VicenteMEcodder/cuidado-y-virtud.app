@@ -1,4 +1,4 @@
-package com.example.cuidadoyvirtudapp.ui
+package com.example.cuidadoyvirtudapp.ui.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cuidadoyvirtudapp.R
 import com.example.cuidadoyvirtudapp.data.Repo
+import com.example.cuidadoyvirtudapp.ui.components.*
 import com.example.cuidadoyvirtudapp.ui.theme.*
 
 @Composable
@@ -55,9 +56,12 @@ fun InicioScreen(onRol: (String) -> Unit) {
         )
     }
     FondoCalido {
-        Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Box(Modifier.background(Color.White, RoundedCornerShape(28.dp)).padding(horizontal = 18.dp, vertical = 10.dp)) {
-                Image(painterResource(R.drawable.logo), "Cuidado y Virtud", Modifier.height(110.dp))
+        // Foto de fondo (arriba se ven las personas) con un velo claro hacia abajo para que los botones y textos se lean bien.
+        Image(painterResource(R.drawable.fondo_inicio), null, Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alignment = Alignment.TopCenter)
+        Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to Color.Transparent, 0.30f to Color.White.copy(alpha = .55f), 0.50f to Color.White.copy(alpha = .93f), 1f to Color.White.copy(alpha = .97f))))
+        Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
+            Box(Modifier.background(Color.White, RoundedCornerShape(28.dp)).padding(horizontal = 18.dp, vertical = 8.dp)) {
+                Image(painterResource(R.drawable.logo), "Cuidado y Virtud", Modifier.height(84.dp))
             }
             Spacer(Modifier.height(10.dp))
             Titulo("Tu Cuidado", 34)
@@ -87,50 +91,3 @@ private fun BotonRol(emoji: String, titulo: String, sub: String, colores: List<C
     }
 }
 
-@Composable
-fun AdminScreen(onSalir: () -> Unit) {
-    val personas = remember(Repo.version) { Repo.personasAdmin() }
-    var codigo by remember { mutableStateOf("——") }
-    FondoCalido {
-    LazyColumn(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        item {
-            Banner(colores = listOf(Lila, Color(0xFF5A6FB8))) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.background(Color.White, RoundedCornerShape(14.dp)).padding(6.dp)) { Image(painterResource(R.drawable.logo), "Logo", Modifier.height(38.dp)) }
-                    Spacer(Modifier.size(10.dp))
-                    Column(Modifier.weight(1f)) { Text("Gestión", fontSize = 24.sp, fontWeight = FontWeight.Black, color = Color.White); Text("Administrador/a · seguridad máxima", fontSize = 12.sp, color = Color.White.copy(alpha = .9f), fontWeight = FontWeight.SemiBold) }
-                    Text("Cerrar sesión", fontSize = 12.sp, color = Color.White, textDecoration = TextDecoration.Underline, modifier = Modifier.clickable(onClick = onSalir).padding(6.dp))
-                }
-            }
-        }
-        item {
-            Tarjeta(borde = AzulMedio.copy(alpha = .4f), fondo = AzulPalido) {
-                FilaIcono("🔐", "Mínimo privilegio", "El Administrador gestiona accesos y dispositivos, pero no ve respuestas de salud ni alertas personales de las personas mayores.")
-            }
-        }
-        item {
-            Tarjeta {
-                Titulo("Enrolar dispositivo", 16); Spacer(Modifier.height(6.dp))
-                Text(codigo, fontSize = 34.sp, fontWeight = FontWeight.Black, color = Marino, letterSpacing = 4.sp, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-                Text("Código de un solo uso (simulado). La persona mayor no necesitará ingresar contraseña.", fontSize = 12.sp, color = AzulMedio, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(8.dp))
-                Button(onClick = { val n = (100000..999999).random().toString(); codigo = n.substring(0, 3) + " " + n.substring(3) }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Marino), shape = RoundedCornerShape(12.dp)) { Text("Generar código", fontWeight = FontWeight.Bold) }
-            }
-        }
-        item { Titulo("Personas registradas (${personas.size})", 16) }
-        items(personas, key = { it.persona.id }) { p ->
-            Tarjeta {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(p.persona.id, fontWeight = FontWeight.Black, fontSize = 15.sp, color = Marino)
-                        Text("${p.persona.tramo} · ${p.persona.zona}", fontSize = 12.sp, color = Marino.copy(alpha = .65f))
-                    }
-                    Text(if (p.consentimiento == "vigente") "✔ Vigente" else "⏸ Pausado", fontWeight = FontWeight.Black, fontSize = 12.sp,
-                        color = if (p.consentimiento == "vigente") Verde else Ambar,
-                        modifier = Modifier.background(if (p.consentimiento == "vigente") VerdePalido else AmbarPalido, RoundedCornerShape(50)).padding(horizontal = 10.dp, vertical = 4.dp))
-                }
-            }
-        }
-    }
-    }
-}

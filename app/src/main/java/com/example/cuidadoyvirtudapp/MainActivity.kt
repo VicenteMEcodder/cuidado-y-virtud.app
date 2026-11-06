@@ -20,10 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.example.cuidadoyvirtudapp.data.Repo
-import com.example.cuidadoyvirtudapp.ui.AdminScreen
-import com.example.cuidadoyvirtudapp.ui.CuidadorScreen
-import com.example.cuidadoyvirtudapp.ui.InicioScreen
-import com.example.cuidadoyvirtudapp.ui.MayorScreen
+import com.example.cuidadoyvirtudapp.ui.screen.AdminScreen
+import com.example.cuidadoyvirtudapp.ui.screen.CuidadorScreen
+import com.example.cuidadoyvirtudapp.ui.screen.InicioScreen
+import com.example.cuidadoyvirtudapp.ui.screen.MayorScreen
 import com.example.cuidadoyvirtudapp.ui.theme.CuidadoYVirtudAPPTheme
 import com.example.cuidadoyvirtudapp.ui.theme.Fondo
 import com.example.cuidadoyvirtudapp.ui.theme.Marino

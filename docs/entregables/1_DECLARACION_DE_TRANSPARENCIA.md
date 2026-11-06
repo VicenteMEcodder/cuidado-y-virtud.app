@@ -37,6 +37,9 @@ Esta declaración dice, sin adornos, qué modelos y herramientas de IA usamos, p
 - **Texto libre opcional:** si la persona dice que se siente "más o menos" o "mal", puede contar por qué. **Solo se anota si ella responde "Sí, anótelo".** La IA no lo lee; solo lo ve el funcionario. **Se borra solo a los 15 días** y la persona puede borrarlo cuando quiera.
 - **Consentimiento:** la persona decide si comparte su estado, si se avisa a su familia, si quiere que le presenten a otras personas y si pausa el acompañamiento. Quienes pausan o no comparten no aparecen en la cola.
 
+### Agenda y recordatorios (sin IA)
+El funcionario puede agendar recordatorios (remedios, citas, llamadas). **Son avisos a una hora fija que decide una persona; no usan inteligencia artificial.** Para que existan, el administrador debe habilitar la agenda de esa persona tras una solicitud escrita (lo hace cumplir la base de datos) y la persona debe aceptar recibir avisos. Los avisos usan la voz del teléfono y notificaciones del sistema.
+
 ## 4. Supervisión humana
 
 - Cada alerta queda **pendiente de revisión**. Un funcionario elige una acción (descartar, esperar, llamar, visitar o derivar) y **debe escribir una justificación**.

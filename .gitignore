@@ -20,10 +20,7 @@ build/
 __pycache__/
 *.pyc
 .pytest_cache/
-tu_cuidado/data/*.db
+docs/prototipo_web_python/data/*.db
 
-# Material del evento que NO es nuestro o tiene datos personales
-Bases_Hackathon_IA_Congreso_Social_UC_2026.pdf
-Correo de DuocUC*.pdf
-VID_*.txt
-stitch_plataforma_web_tu_cuidado.zip
+# Material del evento que NO es nuestro o tiene datos personales (se queda solo en el computador)
+material_evento/

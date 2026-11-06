@@ -3,7 +3,7 @@ package com.example.cuidadoyvirtudapp.domain
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
-import com.example.cuidadoyvirtudapp.data.Db
+import com.example.cuidadoyvirtudapp.data.database.Db
 import org.json.JSONArray
 import org.json.JSONObject
 

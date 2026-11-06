@@ -2,6 +2,7 @@ package com.example.cuidadoyvirtudapp.data
 
 import android.content.ContentValues
 import android.content.Context
+import com.example.cuidadoyvirtudapp.data.database.Db
 import android.database.sqlite.SQLiteDatabase
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -15,7 +16,10 @@ import com.example.cuidadoyvirtudapp.domain.Senal
 import com.example.cuidadoyvirtudapp.domain.Workflow
 
 data class PersonaPub(val id: String, val alias: String, val iniciales: String, val tramo: String, val zona: String)
-data class ConsentVista(val vigente: Boolean, val comparte: Boolean, val avisarFamilia: Boolean, val socializar: Boolean = false)
+data class ConsentVista(val vigente: Boolean, val comparte: Boolean, val avisarFamilia: Boolean, val socializar: Boolean = false, val recordatorios: Boolean = false)
+data class EventoAgenda(val id: Long, val personaId: String, val titulo: String, val tipo: String, val hora: String, val repeticion: String, val fecha: String?)
+data class SolicitudAgenda(val id: Long, val persona: PersonaPub, val solicitante: String, val motivo: String, val estado: String, val ts: String)
+data class PersonaAgenda(val persona: PersonaPub, val estado: String, val eventos: Int, val recordatorios: Boolean)
 data class Nota(val ts: String, val tipo: String, val categoria: String, val texto: String, val vence: String = "")
 data class Impacto(
     val personas: Int, val visibles: Int, val enCola: Int, val revisar: Int, val observar: Int, val sinNovedad: Int,
@@ -29,7 +33,11 @@ data class AlertaVista(
 data class Grafico(val titulo: String, val serie: List<Double?>, val base: Double)
 data class BitacoraItem(val ts: String, val actor: String, val evento: String, val detalle: String, val personaId: String?)
 data class Detalle(val alerta: AlertaVista, val grafico: Grafico, val bitacora: List<BitacoraItem>, val notas: List<Nota> = emptyList())
-data class Cola(val fecha: String, val revisar: Int, val observar: Int, val sinNovedad: Int, val alertas: List<AlertaVista>, val noVisibles: Int)
+data class SinNovedad(val persona: PersonaPub, val spark: List<Double?>)
+data class Cola(
+    val fecha: String, val revisar: Int, val observar: Int, val sinNovedad: Int, val alertas: List<AlertaVista>, val noVisibles: Int,
+    val sinNovedadLista: List<SinNovedad> = emptyList(),
+)
 data class PersonaAdmin(val persona: PersonaPub, val consentimiento: String, val comparte: Boolean)
 data class Clasif(val tp: Int, val fp: Int, val fn: Int, val tn: Int) {
     val recall get() = if (tp + fn == 0) 0.0 else tp.toDouble() / (tp + fn)
@@ -59,6 +67,7 @@ object Repo {
     var version by mutableIntStateOf(0)
 
     fun iniciar(ctx: Context) {
+        appCtx = ctx.applicationContext
         helper = Db(ctx.applicationContext)
         db = helper.writableDatabase
         recargar()
@@ -66,6 +75,7 @@ object Repo {
         if (vacio) sembrarAlertas()
         asegurarPermisoDemo()
         purgarNotasVencidas()
+        reprogramarAvisos()
         version++
     }
 
@@ -83,27 +93,138 @@ object Repo {
     }
 
     fun reiniciarDemo() {
+        appCtx?.let { c -> for (e in eventosDe(personaDemo().id)) com.example.cuidadoyvirtudapp.Recordatorios.cancelar(c, e.id) }
         helper.reiniciarDemo(db)
-        recargar(); sembrarAlertas(); asegurarPermisoDemo(); version++
+        recargar(); sembrarAlertas(); asegurarPermisoDemo(); reprogramarAvisos(); version++
     }
 
     // ---------------- consentimiento ----------------
     private fun consent(pid: String): ConsentVista =
-        db.rawQuery("SELECT comparte, avisar_familia, pausado, socializar FROM consentimientos WHERE persona_id=?", arrayOf(pid)).use {
-            it.moveToFirst(); ConsentVista(it.getInt(2) == 0, it.getInt(0) == 1, it.getInt(1) == 1, it.getInt(3) == 1)
+        db.rawQuery("SELECT comparte, avisar_familia, pausado, socializar, recordatorios FROM consentimientos WHERE persona_id=?", arrayOf(pid)).use {
+            it.moveToFirst(); ConsentVista(it.getInt(2) == 0, it.getInt(0) == 1, it.getInt(1) == 1, it.getInt(3) == 1, it.getInt(4) == 1)
         }
 
     private fun puedeProcesar(pid: String): Boolean = consent(pid).let { it.vigente && it.comparte }
 
     fun leerConsentimiento(pid: String): ConsentVista = consent(pid)
 
-    fun guardarConsentimiento(pid: String, comparte: Boolean, avisarFamilia: Boolean, pausado: Boolean, socializar: Boolean) {
+    fun guardarConsentimiento(pid: String, comparte: Boolean, avisarFamilia: Boolean, pausado: Boolean, socializar: Boolean, recordatorios: Boolean) {
         db.update("consentimientos", ContentValues().apply {
             put("comparte", if (comparte) 1 else 0); put("avisar_familia", if (avisarFamilia) 1 else 0)
-            put("pausado", if (pausado) 1 else 0); put("socializar", if (socializar) 1 else 0); put("ts", Db.ahora())
+            put("pausado", if (pausado) 1 else 0); put("socializar", if (socializar) 1 else 0); put("recordatorios", if (recordatorios) 1 else 0); put("ts", Db.ahora())
         }, "persona_id=?", arrayOf(pid))
-        Workflow.bitacora(db, "Persona mayor", "Consentimiento actualizado", null, pid, "comparte=$comparte, familia=$avisarFamilia, pausado=$pausado, conocer_personas=$socializar")
+        Workflow.bitacora(db, "Persona mayor", "Consentimiento actualizado", null, pid, "comparte=$comparte, familia=$avisarFamilia, pausado=$pausado, conocer_personas=$socializar, recordatorios=$recordatorios")
+        reprogramarAvisos()
         version++
+    }
+
+    // ---------------- agenda y recordatorios ----------------
+    // Los avisos son recordatorios programados por un funcionario (no una predicción de la IA). Tres condiciones para que lleguen:
+    // 1) el administrador habilitó la agenda tras una solicitud escrita, 2) la persona aceptó recibirlos, 3) hay eventos activos.
+    private var appCtx: Context? = null
+    var avisoManual by mutableIntStateOf(-1) // demo: forzar un aviso ahora (id de evento)
+
+    fun estadoAgenda(pid: String): String =
+        db.rawQuery("SELECT estado FROM agenda_solicitudes WHERE persona_id=? ORDER BY id DESC LIMIT 1", arrayOf(pid)).use { if (it.moveToFirst()) it.getString(0) else "SIN_SOLICITUD" }
+
+    /** El cuidador pide al administrador que habilite la agenda de una persona. Exige un motivo escrito (sin datos de salud). */
+    fun solicitarAgenda(pid: String, motivo: String) {
+        Workflow.exigirJustificacion(motivo)
+        val estado = estadoAgenda(pid)
+        if (estado == "SOLICITADA") throw BloqueoHumano("Ya hay una solicitud esperando al administrador.")
+        if (estado == "HABILITADA") throw BloqueoHumano("La agenda ya está habilitada.")
+        db.insert("agenda_solicitudes", null, ContentValues().apply {
+            put("persona_id", pid); put("solicitante", REVISOR); put("motivo", motivo.trim()); put("estado", "SOLICITADA"); put("ts", Db.ahora())
+        })
+        Workflow.bitacora(db, REVISOR, "Solicitó al administrador habilitar la agenda", null, pid, motivo.trim())
+        version++
+    }
+
+    fun solicitudesAgenda(): List<SolicitudAgenda> {
+        val l = ArrayList<SolicitudAgenda>()
+        db.rawQuery("SELECT id, persona_id, solicitante, motivo, estado, ts FROM agenda_solicitudes WHERE estado='SOLICITADA' ORDER BY id", null).use {
+            while (it.moveToNext()) l += SolicitudAgenda(it.getLong(0), pub(it.getString(1)), it.getString(2), it.getString(3), it.getString(4), it.getString(5))
+        }
+        return l
+    }
+
+    /** El administrador habilita o rechaza. Sin habilitación, ni la base de datos acepta eventos (trigger). */
+    fun resolverAgenda(id: Long, habilitar: Boolean) {
+        val pid = db.rawQuery("SELECT persona_id FROM agenda_solicitudes WHERE id=?", arrayOf(id.toString())).use { it.moveToFirst(); it.getString(0) }
+        db.update("agenda_solicitudes", ContentValues().apply {
+            put("estado", if (habilitar) "HABILITADA" else "RECHAZADA"); put("admin", "Administrador/a"); put("resuelto_ts", Db.ahora())
+        }, "id=?", arrayOf(id.toString()))
+        Workflow.bitacora(db, "Administrador/a", if (habilitar) "Habilitó la agenda de una persona" else "Rechazó la solicitud de agenda", null, pid)
+        reprogramarAvisos(); version++
+    }
+
+    fun personasAgenda(): List<PersonaAgenda> = datos.personas.keys.filter { puedeProcesar(it) }.map { pid ->
+        val n = db.rawQuery("SELECT COUNT(*) FROM agenda_eventos WHERE persona_id=?", arrayOf(pid)).use { it.moveToFirst(); it.getInt(0) }
+        PersonaAgenda(pub(pid), estadoAgenda(pid), n, consent(pid).recordatorios)
+    }.sortedWith(compareBy({ when (it.estado) { "HABILITADA" -> 0; "SOLICITADA" -> 1; else -> 2 } }, { it.persona.alias }))
+
+    fun eventosDe(pid: String): List<EventoAgenda> {
+        val l = ArrayList<EventoAgenda>()
+        db.rawQuery("SELECT id, persona_id, titulo, tipo, hora, repeticion, fecha FROM agenda_eventos WHERE persona_id=? ORDER BY hora", arrayOf(pid)).use {
+            while (it.moveToNext()) l += EventoAgenda(it.getLong(0), it.getString(1), it.getString(2), it.getString(3), it.getString(4), it.getString(5), it.getString(6))
+        }
+        return l
+    }
+
+    /** Lanza BloqueoHumano si la agenda no está habilitada o los datos no son válidos. */
+    fun crearEvento(pid: String, titulo: String, tipo: String, hora: String, repeticion: String) {
+        if (titulo.trim().length < 3) throw BloqueoHumano("Escriba qué hay que recordar (por ejemplo: «Pastilla de la presión»).")
+        if (!com.example.cuidadoyvirtudapp.domain.Agenda.horaValida(hora)) throw BloqueoHumano("La hora no es válida.")
+        try {
+            val fecha = if (repeticion == "una_vez") Db.ahora().substring(0, 10) else null
+            db.insertOrThrow("agenda_eventos", null, ContentValues().apply {
+                put("persona_id", pid); put("titulo", titulo.trim()); put("tipo", tipo); put("hora", hora); put("repeticion", repeticion)
+                if (fecha != null) put("fecha", fecha); put("creado_por", REVISOR); put("ts", Db.ahora())
+            })
+        } catch (e: android.database.sqlite.SQLiteException) {
+            throw BloqueoHumano("BLOQUEADO: el administrador no ha habilitado la agenda de esta persona.")
+        }
+        Workflow.bitacora(db, REVISOR, "Agendó un recordatorio", null, pid, "${com.example.cuidadoyvirtudapp.domain.Agenda.TIPOS[tipo]?.second ?: tipo} a las $hora")
+        reprogramarAvisos(); version++
+    }
+
+    fun borrarEvento(id: Long) {
+        appCtx?.let { com.example.cuidadoyvirtudapp.Recordatorios.cancelar(it, id) }
+        db.delete("agenda_eventos", "id=?", arrayOf(id.toString()))
+        reprogramarAvisos(); version++
+    }
+
+    private fun avisosHabilitados(pid: String): Boolean = estadoAgenda(pid) == "HABILITADA" && consent(pid).let { it.recordatorios && it.vigente }
+
+    /** Aviso que la persona mayor debe ver ahora: uno forzado desde el panel (demo) o uno cuya hora llegó y aún no se respondió hoy. */
+    fun avisoPendiente(pid: String): EventoAgenda? {
+        if (!avisosHabilitados(pid)) return null
+        val hoy = Db.ahora().substring(0, 10)
+        val ahora = java.util.Calendar.getInstance()
+        val respondido = { id: Long -> db.rawQuery("SELECT COUNT(*) FROM recordatorios_log WHERE evento_id=? AND fecha=?", arrayOf(id.toString(), hoy)).use { it.moveToFirst(); it.getInt(0) > 0 } }
+        val eventos = eventosDe(pid)
+        if (avisoManual >= 0) eventos.firstOrNull { it.id == avisoManual.toLong() }?.let { return it }
+        return eventos.firstOrNull { (it.repeticion == "diaria" || it.fecha == hoy) && com.example.cuidadoyvirtudapp.domain.Agenda.esDebido(it.hora, ahora) && !respondido(it.id) }
+    }
+
+    fun responderAviso(e: EventoAgenda, hecho: Boolean) {
+        if (avisoManual == e.id.toInt()) avisoManual = -1
+        db.insert("recordatorios_log", null, ContentValues().apply {
+            put("evento_id", e.id); put("fecha", Db.ahora().substring(0, 10)); put("estado", if (hecho) "CONFIRMADO" else "POSPUESTO"); put("ts", Db.ahora())
+        })
+        Workflow.bitacora(db, "Persona mayor", if (hecho) "Confirmó su recordatorio" else "Pospuso su recordatorio", null, e.personaId, e.titulo)
+        version++
+    }
+
+    /** Demo: muestra el aviso ahora mismo en la pantalla de la persona mayor (sin esperar la hora). */
+    fun probarAviso(eventoId: Long) { avisoManual = eventoId.toInt(); version++ }
+
+    /** Programa o cancela las alarmas del teléfono. En este prototipo de un solo teléfono, solo para la persona de demostración. */
+    fun reprogramarAvisos() {
+        val ctx = appCtx ?: return
+        val demo = personaDemo().id
+        val activo = avisosHabilitados(demo)
+        for (e in eventosDe(demo)) if (activo) com.example.cuidadoyvirtudapp.Recordatorios.programar(ctx, e) else com.example.cuidadoyvirtudapp.Recordatorios.cancelar(ctx, e.id)
     }
 
     // ---------------- notas que la persona decide anotar ----------------
@@ -208,7 +329,7 @@ object Repo {
     private fun asegurarPermisoDemo() {
         val p = personaDemo().id
         val cambio = db.rawQuery("SELECT COUNT(*) FROM bitacora WHERE persona_id=? AND evento='Consentimiento actualizado'", arrayOf(p)).use { it.moveToFirst(); it.getInt(0) > 0 }
-        if (!cambio) db.execSQL("UPDATE consentimientos SET socializar=1 WHERE persona_id=?", arrayOf(p))
+        if (!cambio) db.execSQL("UPDATE consentimientos SET socializar=1, recordatorios=1 WHERE persona_id=?", arrayOf(p))
     }
 
     // ---------------- persona mayor ----------------
@@ -267,6 +388,22 @@ object Repo {
         version++
     }
 
+    /**
+     * La persona pidió que alguien del equipo la llame hoy. Crea una alerta de nivel "Observar" para que un humano decida;
+     * no llama ni avisa a nadie por sí solo. Si ya tenía una alerta abierta, solo queda registrado.
+     */
+    fun pedirLlamada(pid: String) {
+        val senal = Senal("llamada", "Pidió una llamada", null, "La persona pidió que alguien del equipo la llame hoy.", "moderada")
+        db.beginTransaction()
+        try {
+            val id = Workflow.crearAlerta(db, AlertaCalc(pid, "Observar", 5.0, listOf(senal), "La persona pidió que alguien del equipo la llame.", false), "llamada")
+            if (id == null) Workflow.bitacora(db, "Persona mayor", "Pidió una llamada (ya tenía una alerta abierta)", null, pid)
+            else Workflow.bitacora(db, "Persona mayor", "Pidió que alguien del equipo la llame", id, pid)
+            db.setTransactionSuccessful()
+        } finally { db.endTransaction() }
+        version++
+    }
+
     // ---------------- cuidador ----------------
     private fun vista(c: android.database.Cursor): AlertaVista {
         val pid = c.getString(c.getColumnIndexOrThrow("persona_id"))
@@ -285,8 +422,9 @@ object Repo {
             .sortedWith(compareBy<AlertaVista> { if (it.nivel == "Revisar") 0 else 1 }.thenBy { if (it.origen == "sos") 0 else 1 }.thenByDescending { it.score })
         val visibles = datos.personas.keys.filter { puedeProcesar(it) }
         val conAlerta = alertas.map { it.persona.id }.toSet()
+        val sin = visibles.filter { it !in conAlerta }.map { SinNovedad(pub(it), Detector.serieBienestar(datos, it, 30)) }
         return Cola(datos.hoy(), alertas.count { it.nivel == "Revisar" }, alertas.count { it.nivel == "Observar" },
-            visibles.count { it !in conAlerta }, alertas, datos.personas.size - visibles.size)
+            sin.size, alertas, datos.personas.size - visibles.size, sin)
     }
 
     fun detalle(id: Long): Detalle? {

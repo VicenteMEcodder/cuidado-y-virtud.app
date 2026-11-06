@@ -1,4 +1,4 @@
-package com.example.cuidadoyvirtudapp.ui
+package com.example.cuidadoyvirtudapp.ui.screen
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -24,6 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -49,27 +51,51 @@ import com.example.cuidadoyvirtudapp.data.AlertaVista
 import com.example.cuidadoyvirtudapp.data.Repo
 import com.example.cuidadoyvirtudapp.domain.BloqueoHumano
 import com.example.cuidadoyvirtudapp.domain.Workflow
+import com.example.cuidadoyvirtudapp.ui.components.*
 import com.example.cuidadoyvirtudapp.ui.theme.*
 import kotlinx.coroutines.delay
 
-private val TABS = listOf("🔔" to "Alertas", "🤝" to "Compañía", "👥" to "Personas", "📈" to "Impacto", "🕘" to "Historial", "⚖️" to "Equidad")
+private val TABS = listOf("🔔" to "Alertas", "🤝" to "Compañía", "📅" to "Agenda", "📈" to "Impacto", "🕘" to "Historial", "⚖️" to "Equidad")
 
 @Composable
 fun CuidadorScreen(onSalir: () -> Unit) {
     var tab by remember { mutableIntStateOf(0) }
     var caso by remember { mutableStateOf<Long?>(null) }
-    BackHandler { if (caso != null) caso = null else onSalir() }
+    var agendaPid by remember { mutableStateOf<String?>(null) }
+    BackHandler { if (caso != null) caso = null else if (agendaPid != null) agendaPid = null else onSalir() }
 
     if (caso != null) { CasoScreen(caso!!) { caso = null }; return }
+    if (agendaPid != null) { AgendaPersonaScreen(agendaPid!!) { agendaPid = null }; return }
 
     Scaffold(
         containerColor = Crema,
         bottomBar = {
+            // Pie simple: 3 opciones principales + menú "☰" con el resto (Impacto, Historial, Equidad y cambiar de perfil).
+            var menuAbierto by remember { mutableStateOf(false) }
+            val colores = NavigationBarItemDefaults.colors(selectedTextColor = Marino, indicatorColor = AzulPalido)
             NavigationBar(containerColor = Color.White) {
-                TABS.forEachIndexed { i, (ic, nombre) ->
-                    NavigationBarItem(selected = tab == i, onClick = { tab = i }, icon = { Text(ic, fontSize = 20.sp) }, label = { Text(nombre, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1) },
-                        colors = NavigationBarItemDefaults.colors(selectedTextColor = Marino, indicatorColor = AzulPalido))
+                TABS.take(3).forEachIndexed { i, (ic, nombre) ->
+                    NavigationBarItem(selected = tab == i, onClick = { tab = i }, icon = { Text(ic, fontSize = 24.sp) },
+                        label = { Text(nombre, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1) }, colors = colores)
                 }
+                NavigationBarItem(
+                    selected = tab >= 3, onClick = { menuAbierto = true }, colors = colores,
+                    icon = {
+                        Box {
+                            Text("☰", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Marino)
+                            DropdownMenu(expanded = menuAbierto, onDismissRequest = { menuAbierto = false }) {
+                                TABS.drop(3).forEachIndexed { j, (ic, nombre) ->
+                                    DropdownMenuItem(
+                                        text = { Text("$ic  $nombre", fontSize = 17.sp, fontWeight = if (tab == j + 3) FontWeight.Black else FontWeight.SemiBold, color = Marino) },
+                                        onClick = { tab = j + 3; menuAbierto = false },
+                                    )
+                                }
+                                DropdownMenuItem(text = { Text("↩  Cambiar perfil", fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = Marino) }, onClick = { menuAbierto = false; onSalir() })
+                            }
+                        }
+                    },
+                    label = { Text(if (tab >= 3) TABS[tab].second else "Menú", fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1) },
+                )
             }
         },
     ) { pad ->
@@ -77,7 +103,7 @@ fun CuidadorScreen(onSalir: () -> Unit) {
             when (tab) {
                 0 -> AlertasTab(onSalir) { caso = it }
                 1 -> CompaniaTab()
-                2 -> PersonasTab()
+                2 -> AgendaTab { agendaPid = it }
                 3 -> ImpactoTab()
                 4 -> HistorialTab()
                 else -> EquidadTab()
@@ -89,6 +115,9 @@ fun CuidadorScreen(onSalir: () -> Unit) {
 @Composable
 private fun AlertasTab(onSalir: () -> Unit, abrir: (Long) -> Unit) {
     val cola = remember(Repo.version) { Repo.cola() }
+    var filtro by remember { mutableStateOf("Todos") } // Todos | Revisar | Observar | Sin novedad
+    val alertasVista = cola.alertas.filter { filtro == "Todos" || it.nivel == filtro }
+    val sinVista = if (filtro == "Todos" || filtro == "Sin novedad") cola.sinNovedadLista else emptyList()
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Banner(colores = listOf(Marino, Turquesa)) {
@@ -103,26 +132,54 @@ private fun AlertasTab(onSalir: () -> Unit, abrir: (Long) -> Unit) {
             }
         }
         item {
+            // Los tres contadores funcionan como filtros: tocar uno muestra solo esa categoría; tocarlo de nuevo vuelve a "Todos".
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Contador("Revisar", cola.revisar, "casos", Modifier.weight(1f))
-                Contador("Observar", cola.observar, "casos", Modifier.weight(1f))
-                Contador("Sin novedad", cola.sinNovedad, "personas", Modifier.weight(1f))
+                Contador("Revisar", cola.revisar, "casos", filtro == "Revisar", Modifier.weight(1f)) { filtro = if (filtro == "Revisar") "Todos" else "Revisar" }
+                Contador("Observar", cola.observar, "casos", filtro == "Observar", Modifier.weight(1f)) { filtro = if (filtro == "Observar") "Todos" else "Observar" }
+                Contador("Sin novedad", cola.sinNovedad, "personas", filtro == "Sin novedad", Modifier.weight(1f)) { filtro = if (filtro == "Sin novedad") "Todos" else "Sin novedad" }
+            }
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                listOf("Todos" to "Todos (${cola.alertas.size + cola.sinNovedad})", "Revisar" to "⚠️ Revisar", "Observar" to "👁️ Observar", "Sin novedad" to "✅ Sin novedad").forEach { (k, t) ->
+                    val sel = filtro == k
+                    Text(t, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (sel) Color.White else Marino,
+                        modifier = Modifier.background(if (sel) Marino else Color.White, RoundedCornerShape(50)).border(1.dp, Marino.copy(alpha = .25f), RoundedCornerShape(50))
+                            .clickable { filtro = k }.padding(horizontal = 10.dp, vertical = 7.dp))
+                }
             }
         }
         if (cola.noVisibles > 0) item {
             Text("🔒 ${cola.noVisibles} personas no aparecen aquí porque pausaron el acompañamiento o no autorizaron compartir su estado. Se respeta su decisión.",
                 fontSize = 12.sp, color = Marino.copy(alpha = .75f), fontWeight = FontWeight.SemiBold)
         }
-        item { Titulo("Casos priorizados para revisión", 16) }
-        if (cola.alertas.isEmpty()) item { Tarjeta { Text("No quedan casos por revisar. 🌱", fontWeight = FontWeight.Bold, color = AzulMedio, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) } }
-        items(cola.alertas, key = { it.id }) { TarjetaAlerta(it) { abrir(it.id) } }
+        item { Titulo(if (filtro == "Todos") "Casos priorizados para revisión" else "Mostrando: $filtro (${alertasVista.size + sinVista.size})", 16) }
+        if (alertasVista.isEmpty() && sinVista.isEmpty()) item { Tarjeta { Text(if (filtro == "Todos") "No quedan casos por revisar. 🌱" else "No hay personas en «$filtro» ahora. 🌱", fontWeight = FontWeight.Bold, color = AzulMedio, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) } }
+        items(alertasVista, key = { "a${it.id}" }) { TarjetaAlerta(it) { abrir(it.id) } }
+        items(sinVista, key = { "s${it.persona.id}" }) { TarjetaSinNovedad(it) }
     }
 }
 
 @Composable
-private fun Contador(nivel: String, n: Int, unidad: String, modifier: Modifier) {
+private fun TarjetaSinNovedad(s: com.example.cuidadoyvirtudapp.data.SinNovedad) {
+    val sem = semaforo("Sin novedad")
+    Tarjeta(borde = sem.borde.copy(alpha = .5f)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Box(Modifier.size(40.dp).background(colorAvatar(s.persona.id), androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) { Text(s.persona.iniciales, fontWeight = FontWeight.Black, color = Color.White) }
+            Column(Modifier.weight(1f)) {
+                Text(s.persona.alias, fontSize = 16.sp, fontWeight = FontWeight.Black, color = Marino)
+                Text("${s.persona.tramo} años · ${s.persona.zona}", fontSize = 12.sp, color = Marino.copy(alpha = .6f), fontWeight = FontWeight.SemiBold)
+                Text("Sin cambios respecto de su rutina habitual.", fontSize = 12.sp, color = Marino.copy(alpha = .8f))
+            }
+            Column(horizontalAlignment = Alignment.End) { ChipNivel("Sin novedad"); Spacer(Modifier.height(4.dp)); Spark(s.spark, sem.borde) }
+        }
+    }
+}
+
+@Composable
+private fun Contador(nivel: String, n: Int, unidad: String, seleccionado: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val s = semaforo(nivel)
-    Column(modifier.background(s.fondo, RoundedCornerShape(20.dp)).border(2.dp, s.borde, RoundedCornerShape(20.dp)).padding(12.dp)) {
+    Column(modifier.background(s.fondo, RoundedCornerShape(20.dp)).border(if (seleccionado) 5.dp else 2.dp, s.borde, RoundedCornerShape(20.dp)).clickable(onClick = onClick).padding(12.dp)) {
         Text("${s.icono} ${nivel.uppercase()}", fontSize = 10.sp, fontWeight = FontWeight.Black, color = s.texto)
         Text("$n", fontSize = 32.sp, fontWeight = FontWeight.Black, color = s.texto)
         Text(unidad, fontSize = 11.sp, color = Marino.copy(alpha = .75f), fontWeight = FontWeight.SemiBold)
@@ -141,10 +198,11 @@ private fun TarjetaAlerta(a: AlertaVista, onRevisar: () -> Unit) {
             }
             ChipNivel(a.nivel)
         }
-        if (a.origen == "sos" || a.estado == "EN_ESPERA") {
+        if (a.origen == "sos" || a.origen == "llamada" || a.estado == "EN_ESPERA") {
             Spacer(Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (a.origen == "sos") Text("🆘 Pidió ayuda", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Naranja, modifier = Modifier.background(NaranjaPalido, RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 2.dp))
+                if (a.origen == "llamada") Text("📞 Pidió una llamada", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Marino, modifier = Modifier.background(Cielo, RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 2.dp))
                 if (a.estado == "EN_ESPERA") Text("⏳ En espera", fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.background(AzulPalido, RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 2.dp))
             }
         }

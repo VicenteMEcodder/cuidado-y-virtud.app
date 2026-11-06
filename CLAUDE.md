@@ -273,6 +273,70 @@ Pantallas: `/` login simulado · `/mayor` check-in por voz/botones (+ `/mayor/co
 - **Pestaña "Impacto"** (Cuidador): cifras reales de la sesión sobre datos sintéticos (personas por revisar vs. total que comparte; decisiones humanas, falsas alarmas descartadas, envíos bloqueados, derivaciones, propuestas, notas), el **modelo de operación** (quién recibe las alertas y qué hace: funcionario, red de apoyo, persona mayor, administrador) y continuidad (piloto con Fundación La Rosa). **Supuesto declarado:** 10 min por revisión (a validar); las horas "ahorradas" son una estimación, no una medición.
 - **Verificado:** compila; 12 pruebas JVM pasan (incluye retención: 16 días vence, 14 no, y la fecha de borrado). Instalada en el teléfono; sin cierres al abrir. El flujo completo en pantalla no se probó (Android bloquea los toques simulados).
 
+### 2.17 Filtros por categoría y agenda de recordatorios (2026-11-06, a pedido del equipo) — pendiente de aprobación
+**Filtros (Cuidador > Alertas):** los tres contadores (Revisar / Observar / Sin novedad) y una fila de chips funcionan como filtro: tocar uno muestra solo esa categoría; "Todos" muestra todo. "Sin novedad" lista a las personas sin alerta (con su tendencia). La pestaña "Personas" se reemplazó por "Agenda" porque el filtro "Todos"/"Sin novedad" ya lista a las personas.
+**Agenda y recordatorios (nueva pestaña "Agenda"):**
+- El funcionario elige una persona y agenda **remedios, citas, llamadas u otros** (hora fija, "todos los días" o "solo hoy"). Los avisos son **recordatorios a la hora que fija el funcionario; NO son una predicción de la IA** (así lo declaran la pantalla y los documentos).
+- **Tres condiciones para que llegue un aviso:** (1) el **administrador habilitó** la agenda de esa persona tras una **solicitud escrita** del funcionario (motivo ≥ 10 caracteres, sin datos de salud); (2) la **persona aceptó** recibirlos (nuevo interruptor "Que mi cuidador me recuerde mis remedios y citas"); (3) hay eventos activos.
+- **Garantía en la base de datos:** un trigger rechaza crear eventos si el administrador no habilitó la agenda (`agenda_requiere_habilitacion`), igual que el bloqueo de derivaciones. Todo queda en la bitácora (solicitud, habilitación, evento agendado, aviso confirmado).
+- **Administrador:** nueva sección "Solicitudes de agenda" con Habilitar / Rechazar. No ve datos de salud (solo ID seudónimo, tramo, zona y el motivo escrito).
+- **Persona mayor:** al llegar la hora, aparece un aviso grande con voz ("Es hora de su remedio…") con "✅ Ya lo hice" / "Lo veo después", y además una **notificación del teléfono** (alarma del sistema). Si el teléfono está bloqueado o la app cerrada, solo la notificación avisa.
+- **Demostración:** el botón 🔔 junto a cada recordatorio muestra el aviso ahora mismo, sin esperar la hora.
+**Límites declarados:** las alarmas son inexactas (pueden demorar unos minutos); si el teléfono se reinicia se reprograman al abrir la app; en este prototipo de un solo teléfono, las alarmas reales solo se programan para la persona de demostración; "Lo veo después" registra la respuesta del día y no vuelve a avisar ese día; el motivo escrito de la solicitud lo ve el administrador (se pide no escribir datos de salud).
+**Verificado:** compila; 14 pruebas JVM pasan (incluye cálculo de la próxima hora, validación de horas y momento del aviso). La migración de la base de datos (v2→v3) se probó instalando sobre la app existente en el teléfono (sin errores al abrir). **No probado todavía en pantalla:** el flujo completo (Android bloquea los toques simulados) ni la notificación a la hora real.
+
+### 2.18 Más recorridos según las respuestas (2026-11-06, a pedido del equipo) — pendiente de aprobación
+Cada recorrido es **opcional**, se lee en voz alta, se puede responder hablando o con botones, y siempre incluye una salida "no, gracias" que se respeta. Solo se anota lo que la persona elige, como **opción codificada** (sin texto libre), y se borra a los 15 días como el resto de las notas.
+| Si responde… | La app pregunta… | Qué ocurre según su elección |
+|---|---|---|
+| Ánimo "Más o menos" o "Mal" | ¿Quiere decirme por qué? (voz libre u opciones) | Se anota solo si ella dice "Sí, anótelo" (ver 2.15) |
+| "¿Habló hoy con alguien?" → **No** | ¿Le gustaría hablar con alguien? | **Mi familia** → nota "Quiere hablar con su familia" · **Alguien del equipo** → crea una alerta "Observar" con la etiqueta "📞 Pidió una llamada" para que un humano decida (no llama a nadie) · **Otra persona del programa** → al final se sugiere a alguien que también quiere compañía (ver 2.15) · **No, estoy bien así** → no pasa nada (respeta a quien prefiere la tranquilidad) |
+| "¿Pudo hacer sus cosas?" → **Algunas / No pude** | ¿Necesita ayuda con algo? | Compras · Comida · Aseo · Moverme o trámites → nota "Necesita ayuda con…" · No, gracias → nada |
+| "¿Tomó sus remedios?" → **Todavía no** | ¿Por qué no los tomó todavía? | Se me olvidó · No me quedan · Me caen mal → nota "Remedios: …" · Prefiero no decir → nada |
+**Cambio de comportamiento respecto de 2.15:** la sugerencia de compañía **ya no aparece automáticamente** al decir "No" a hablar con alguien; aparece solo si la persona elige "Otra persona del programa". Es más respetuoso de la autonomía y evita sugerir compañía a quien prefiere estar sola.
+**Dónde lo ve el funcionario:** las notas en la tarjeta "Lo que la persona quiso contar" del caso (si la persona tiene un caso abierto); la llamada pedida como alerta con la etiqueta 📞.
+**Límites:** si la persona no comparte su estado, la alerta de "pidió una llamada" no se muestra en la cola (se respeta su consentimiento, aunque haya pedido la llamada; en un servicio real habría que resolverlo con ella); no hay recorrido para quien responde "Bien"; las opciones y las palabras clave de voz son un primer conjunto, sin validar con personas mayores.
+**Verificado:** compila; 15 pruebas JVM pasan (incluye que "no, gracias", "equipo" y "programa" no generen notas). **No probado en pantalla** (Android bloquea los toques simulados).
+
+### 2.19 Mejoras de interfaz: persona mayor y administrador (2026-11-06, a pedido del equipo) — pendiente de aprobación
+**Persona mayor:** botón **"Aa"** que cambia el tamaño de toda la letra (normal → grande → muy grande) sin tocar la configuración del teléfono · **indicador de progreso** (puntos y "2 de 4") · saludo **según la hora** (antes decía siempre "Buenos días"; ahora día, tarde o noche, también por voz) · botón **"🔊 Repetir la pregunta"** · botones de respuesta con **sombra y efecto al tocar**.
+**Administrador:** **resumen** arriba (personas, vigentes, pausadas, solicitudes pendientes) · solicitudes de agenda resaltadas con etiqueta "Nueva" · enrolamiento con **dibujo tipo QR** (solo ilustrativo, no se puede escanear) · personas con **búsqueda por ID** y filtro (Todas / Vigentes / Pausadas). Se mantiene el mínimo privilegio: no muestra respuestas de salud ni alertas.
+**Código:** `ui/MayorScreen.kt` (envoltorio de tamaño de letra + `MayorContenido`) y `ui/AdminScreen.kt` (nuevo; se quitó la versión anterior de `InicioAdminScreens.kt`).
+**Verificado:** compila; 15 pruebas JVM pasan; instalada en el teléfono sin errores al abrir. **No revisado en pantalla** (Android bloquea los toques simulados): conviene mirar cómo queda la letra "muy grande" en las pantallas con muchos botones, y el resumen del administrador.
+
+### 2.20 Pie del Cuidador simplificado (2026-11-06, a pedido del equipo)
+El pie del panel del Cuidador pasó de 6 pestañas a **3 opciones principales (🔔 Alertas, 🤝 Compañía, 📅 Agenda) y un botón "☰ Menú"** con un desplegable que contiene **📈 Impacto, 🕘 Historial, ⚖️ Equidad y "↩ Cambiar perfil"**. Cuando se está en una de las secciones del menú, el botón ☰ queda marcado y muestra el nombre de esa sección. Letra del pie más grande (13 sp). Archivo: `ui/CuidadorScreen.kt`. Verificado: compila e instala sin errores; **no revisado en pantalla** (Android bloquea los toques simulados).
+
+### 2.21 Foto de fondo en el inicio y vista de ejemplo del calendario de citas (2026-11-06)
+**Aclaración de requisito (el equipo la dio a las 14:30):** la "agenda" que quieren es de **citas**, no de recordatorios repetidos: el cuidador **propone** una cita (qué, día, hora); el **administrador la aprueba si hay disponibilidad**; si no hay, el sistema le muestra al cuidador **qué días están libres dentro del mes pedido** (calendario); y al aprobarse, la persona mayor recibe un **aviso con voz**: "Tiene una hora para … el día … a las …". Lo construido hoy (recordatorios diarios con habilitación del administrador, sección 2.17) **no es eso**. **Decisión del equipo:** construirlo **después del congelamiento**; no entra en la versión evaluada.
+**Hecho ahora (solo visual):** pantalla **"Citas con calendario — VISTA DE EJEMPLO, aún no funciona"** (Agenda → tarjeta naranja "Próximamente"): calendario de noviembre 2026 con día pedido sin cupo, días disponibles sugeridos y días sin atención, y los 4 pasos del flujo. Datos ficticios; ningún botón guarda nada. Los días sugeridos serían una **regla automática sobre el calendario del administrador, no IA** (así lo dice la pantalla).
+**Foto de fondo** en la pantalla de elegir perfil (`res/drawable-nodpi/fondo_inicio.webp`), con velo claro para que se lean los textos. **Pendiente:** confirmar el origen de la imagen (si es generada con IA, declararlo en la declaración de transparencia).
+**Verificado:** compila e instala; la pantalla de inicio se revisó en el teléfono; la vista de ejemplo del calendario no se revisó en pantalla.
+
+### 2.22 Reorganización de la carpeta del proyecto (2026-11-06, a pedido del equipo)
+**Objetivo:** que el repositorio quede ordenado y se parezca a `AkiraXleb/DDAM_Panol_Joaquin_Nieto__Benjamin_Godoy` (proyecto de Android Studio limpio en la raíz, README, y el código organizado por capas).
+**⚠️ Rutas nuevas** (los textos de las secciones anteriores de este archivo usan las rutas viejas):
+| Antes | Ahora |
+|---|---|
+| `entregables/` | `docs/entregables/` |
+| `stitch_extraido/` | `docs/diseno_stitch/` |
+| `tu_cuidado/` (prototipo web Python) | `docs/prototipo_web_python/` |
+| Bases, correo de Duoc, transcripción y ZIP en la raíz | `material_evento/` (solo local; ignorada por git; **no se publica**) |
+| `ui/*.kt` | `ui/screen/` (pantallas), `ui/components/` (`Comunes.kt`), `ui/theme/` |
+| `data/Db.kt` | `data/database/Db.kt` |
+| `ui/InicioAdminScreens.kt` | `ui/screen/InicioScreen.kt` |
+**Raíz ahora:** `app/`, `docs/`, `gradle/`, `build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`, `gradlew*`, `README.md`, `CLAUDE.md` (se queda en la raíz para que el registro siga cargándose), `.gitignore`, y la carpeta local `material_evento/`.
+**Paquetes:** `domain/` se mantiene (el repositorio de referencia no la tiene; aquí agrupa el detector, la decisión humana, la retención, la compañía y la agenda).
+**Verificado:** la app compila, las 15 pruebas JVM pasan, las 9 pruebas del prototipo web pasan desde su nueva ubicación y la app se reinstaló en el teléfono sin errores al abrir. **Sin cambios de comportamiento.** Aún **no se hizo commit** de la reorganización ni se subió a GitHub.
+**Pendiente del README:** completar la tabla de integrantes (nombres y roles).
+
+### 2.23 Presentación del pitch en PowerPoint (2026-11-06)
+**Archivo:** `docs/presentacion/Tu_Cuidado_Pitch_Equipo19.pptx` (9 diapositivas, 16:9, con notas del orador). Se hizo a partir del PDF del grupo (`grupo_19.pdf`, el guion que el equipo ajustó: Problema y Solución en sus palabras; demo y propuesta de valor del guion de `docs/entregables`).
+**Diapositivas:** 1 Portada · 2 Problema (2 M → 6 M, 1:1) · 3 Tres preguntas · 4 Solución (IA prioriza, personas deciden) · 5 Demo persona mayor (3 capturas) · 6 Demo funcionario (alertas y compañía + bloqueo sin aprobación) · 7 Propuesta de valor (con la captura de Impacto: 22 de 48) · 8 Límites y siguiente paso (22 de 24, 6 de 36, 100 % sintético, piloto) · 9 Cierre.
+**Cambios respecto del PDF del equipo:** "Fundación Las Rosas" → **Fundación La Rosa** (nombre correcto); "[X de Y]" → **22 de 48** (cifra de la pestaña Impacto en la captura; si se reinicia la demo o cambian los datos, actualizar la diapositiva 7 y su nota); se agregó una viñeta de siguientes pasos (calendario de citas aprobado por el administrador, idea para después del congelamiento).
+**Pendientes:** confirmar con el INE las cifras de la diapositiva 2 (2 M y 6 M las dijo de palabra la Fundación); confirmar el origen de la foto de la portada (si es generada con IA, declararlo en la transparencia); abrir el archivo en PowerPoint para revisar el aspecto final.
+**Cómo se hizo/verificó:** pptxgenjs; pasa la validación estructural; la revisión visual fue con una vista previa aproximada en HTML (en este equipo no hay PowerPoint ni LibreOffice), así que pueden existir pequeñas diferencias de tipografía al abrirlo en PowerPoint.
+
 ### 2.10 Estructura de carpetas propuesta
 ```
 compania/
@@ -375,6 +439,7 @@ El cambio empieza entre el 50 % y el 75 % del período (siempre hay línea base 
 - [ ] Congelar prototipo a las 14:45
 
 ### Doing
+- Repositorio publicado en https://github.com/VicenteMEcodator/cuidado-y-virtud.app (rama `main`, commit `e9b06c5`, 2026-11-06) con `README.md`. **No se subieron** (ver `.gitignore`): el correo de Duoc (datos personales), las Bases y la transcripción de la charla (material ajeno), el ZIP de Stitch, `.idea`, `.claude`, `local.properties`, compilaciones y la base de datos generada. Se quitó de `app/build.gradle.kts` un ajuste de pruebas con ruta local. _Esta nota se agregó después del push: el commit publicado no la incluye._
 - Paso 4: Entregables finales — **entregados** en `entregables/` (`1_DECLARACION_DE_TRANSPARENCIA.md`, `2_GUION_PITCH_5_MINUTOS.md`, `3_PREGUNTAS_DEL_JURADO.md`); falta revisión y ensayo del equipo
 - Paso 3: Prototipo funcional (MVP) — entregado en web (sección 2.13) y Android (2.14–2.16); aprobado en la práctica por el equipo (funciona, pidió mejoras que se incorporaron)
 

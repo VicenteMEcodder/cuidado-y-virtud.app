@@ -66,9 +66,13 @@ Toque **"Sí, anótelo"**. Responda las preguntas siguientes (en cada una, toque
 
 ### Paso 2 · Compañía (0:25)
 En **"¿Habló hoy con alguien?"** responda **"No"**.
-> **A:** "Hoy no habló con nadie. La app le sugiere a otra persona del programa que también quiere conversar —pero solo entre quienes aceptaron conocer a otras. Si dice que sí, **no se conectan solas**: queda para que un funcionario decida."
+> **A:** "Respuestas distintas, recorridos distintos: como hoy no habló con nadie, la app le pregunta **si le gustaría hablar con alguien**. Ella elige: su familia, alguien del equipo, otra persona del programa… o 'No, estoy bien así', que se respeta."
+
+Toque **"Otra persona del programa"**. Siga con las demás preguntas hasta el final.
+> **A:** "La app le sugiere a otra persona que también quiere conversar —solo entre quienes aceptaron conocer a otras. Si dice que sí, **no se conectan solas**: queda para que un funcionario decida."
 
 Toque **"Sí, me gustaría"**.
+*(Si hay tiempo, muestre otro recorrido: responder "Algunas" a "¿Pudo hacer sus cosas de siempre?" abre "¿Necesita ayuda con algo?", y "Todavía no" en los remedios pregunta por qué. Solo se anota lo que la persona elige.)*
 
 ### Paso 3 · El funcionario decide (0:55)
 **B:** vuelve al inicio → **"Soy cuidador/a"**.

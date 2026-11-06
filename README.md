@@ -8,6 +8,18 @@ Prototipo del **Equipo 19** para la *Hackathon de Inteligencia Artificial Aplica
 
 ---
 
+## Integrantes
+
+**Equipo 19** — Hackathon de IA Aplicada · Congreso Social UC 2026.
+
+| Nombre | Rol |
+|---|---|
+| _(completar)_ | _(completar)_ |
+| _(completar)_ | _(completar)_ |
+| _(completar)_ | _(completar)_ |
+| _(completar)_ | _(completar)_ |
+| _(completar)_ | _(completar)_ |
+
 ## El problema
 
 Chile envejece rápido y muchas personas mayores viven solas. Los equipos municipales y de salud no alcanzan a hacer seguimiento individual, y la mayoría de las personas mayores no usa aplicaciones. El desafío pide detectar a tiempo situaciones de riesgo (aislamiento, deterioro funcional, abandono de tratamientos) y conectar con redes de apoyo, **respetando autonomía y privacidad**, con baja alfabetización digital y **decisión humana final ante cualquier alerta**.
@@ -25,9 +37,9 @@ Chile envejece rápido y muchas personas mayores viven solas. Los equipos munici
 
 | Para quién | Funciones |
 |---|---|
-| Persona mayor | Check-in por voz con micrófono automático y botones de respaldo · pregunta de seguimiento ("¿quiere decirme por qué?") si dice "más o menos" o "mal" · botón de ayuda con doble confirmación · consentimiento ("¿qué quiere compartir?") · borrar lo que contó · sugerencia de compañía con otra persona del programa (con consentimiento) |
-| Funcionario/a | Cola de alertas con semáforo (color + ícono + texto) · caso con señales, gráfico "su normalidad vs. últimos 30 días" y consentimiento · **punto de decisión humana con justificación obligatoria** · bitácora · propuestas de compañía · pestaña de **impacto y modelo de operación** · panel de **equidad y transparencia** |
-| Administración | Personas registradas, código de enrolamiento (simulado) |
+| Persona mayor | Check-in por voz con micrófono automático y botones de respaldo · recorridos distintos según lo que responde (por qué se siente mal, si quiere hablar con alguien, si necesita ayuda con algo, por qué no tomó sus remedios), siempre opcionales y con "no, gracias" · botón de ayuda con doble confirmación · consentimiento ("¿qué quiere compartir?") · borrar lo que contó · sugerencia de compañía con otra persona del programa (con consentimiento) |
+| Funcionario/a | Cola de alertas **filtrable por categoría** (Revisar / Observar / Sin novedad) con semáforo (color + ícono + texto) · **agenda de recordatorios** (remedios, citas, llamadas) que el administrador debe habilitar · caso con señales, gráfico "su normalidad vs. últimos 30 días" y consentimiento · **punto de decisión humana con justificación obligatoria** · bitácora · propuestas de compañía · pestaña de **impacto y modelo de operación** · panel de **equidad y transparencia** |
+| Administración | Personas registradas, código de enrolamiento (simulado), **solicitudes de agenda** (habilitar o rechazar) |
 
 ## Cómo funciona la IA (sin cajas negras)
 
@@ -48,6 +60,7 @@ Niveles: **Revisar** (≥ 1 señal fuerte o ≥ 2 moderadas) · **Observar** · 
 | **Texto libre opcional** | Si la persona cuenta *por qué* se siente mal, **solo se anota si ella dice "Sí, anótelo"**, la IA **no lo lee**, solo lo ve el funcionario y **se borra solo a los 15 días**. |
 | **Pedido de ayuda** | Lo inicia la persona (doble confirmación) y solo crea una alerta prioritaria para un humano. No llama ni avisa a nadie por sí solo. |
 | **Compañía entre personas** | Solo entre quienes aceptaron conocer a otras, solo nombre de pila, sin teléfonos ni direcciones. Decir "sí" **no las conecta**: un funcionario decide, con justificación. |
+| **Agenda y recordatorios** | Tres condiciones: el administrador la habilita tras una solicitud escrita (**lo exige un trigger de SQLite**), la persona acepta recibir avisos y hay eventos activos. Los avisos son **recordatorios a la hora que fija el funcionario, no una predicción de la IA**. |
 | **Transparencia** | Declaración de transparencia, registro de modelos y panel de equidad dentro de la app. |
 
 ## Resultados medidos (datos simulados — no son evidencia clínica)
@@ -64,7 +77,7 @@ Sobre 60 personas sintéticas durante 60 días, 24 con un cambio de riesgo simul
 - **App:** Android nativa, **Kotlin + Jetpack Compose**, `minSdk 24`.
 - **Datos:** **SQLite** local, con los datos sintéticos precargados desde `app/src/main/assets/*.csv`.
 - **Voz:** `SpeechRecognizer` y `TextToSpeech` del sistema Android (servicios de Google del teléfono; la app no guarda el audio, pero el servicio puede procesarlo en línea).
-- **Prototipo web previo** (`tu_cuidado/`): Python, FastAPI, scikit-learn y pantallas HTML basadas en el diseño de Stitch.
+- **Prototipo web previo** (`docs/prototipo_web_python/`): Python, FastAPI, scikit-learn y pantallas HTML basadas en el diseño de Stitch.
 
 ## Cómo ejecutarlo
 
@@ -82,10 +95,10 @@ Sobre 60 personas sintéticas durante 60 días, 24 con un cambio de riesgo simul
 ### Prototipo web (opcional)
 ```bash
 pip install fastapi uvicorn scikit-learn numpy pytest httpx
-python tu_cuidado/src/generator.py          # regenera los datos sintéticos
-python -m uvicorn api:app --app-dir tu_cuidado/src --port 8000
+python docs/prototipo_web_python/src/generator.py          # regenera los datos sintéticos
+python -m uvicorn api:app --app-dir docs/prototipo_web_python/src --port 8000
 ```
-Luego abrir `http://localhost:8000`. Pruebas del prototipo web: `python -m pytest tu_cuidado/tests -q`.
+Luego abrir `http://localhost:8000`. Pruebas del prototipo web: `python -m pytest docs/prototipo_web_python/tests -q`.
 
 ## Pruebas
 
@@ -96,27 +109,42 @@ Luego abrir `http://localhost:8000`. Pruebas del prototipo web: `python -m pytes
 ```
 > Nota honesta: en el equipo donde se desarrolló, `gradlew testDebugUnitTest` falló porque la ruta de usuario tenía espacios y tilde, y las 12 pruebas se ejecutaron con JUnit directamente (todas pasan). En una ruta sin espacios debería funcionar, pero **no lo hemos verificado**.
 
-## Estructura del repositorio
+## Estructura del proyecto
 
 ```
-app/                    App Android (Kotlin + Compose)
-  src/main/java/...
-    domain/             Detector (IA), flujo con decisión humana, retención, compañía
-    data/               SQLite (esquema, precarga, trigger) y fachada de datos
-    ui/                 Pantallas: inicio, persona mayor, Cuidador, administración
-  src/main/assets/      Datos sintéticos (CSV)
-  src/test/             Pruebas JVM
-tu_cuidado/             Prototipo web previo (Python) y generador de datos sintéticos
-stitch_extraido/        Diseño de pantallas generado en Stitch (referencia)
-entregables/            Declaración de transparencia, guion del pitch y preguntas del jurado
-CLAUDE.md               Registro central de decisiones del proyecto
+CuidadoYVirtudAPP/
+├── app/                                  App Android (Kotlin + Jetpack Compose)
+│   └── src/
+│       ├── main/
+│       │   ├── java/com/example/cuidadoyvirtudapp/
+│       │   │   ├── MainActivity.kt       Navegación entre perfiles
+│       │   │   ├── Recordatorios.kt      Avisos (alarmas y notificaciones) de la agenda
+│       │   │   ├── domain/               Lógica: detector (IA), decisión humana, retención, compañía, agenda
+│       │   │   ├── data/
+│       │   │   │   ├── Repo.kt           Fachada de datos para la interfaz
+│       │   │   │   └── database/Db.kt    SQLite: esquema, precarga y triggers
+│       │   │   └── ui/
+│       │   │       ├── screen/           Pantallas: inicio, persona mayor, cuidador, administración, agenda
+│       │   │       ├── components/       Piezas reutilizables (tarjetas, banner, gráficos, semáforo)
+│       │   │       └── theme/            Colores y tema
+│       │   ├── assets/                   Datos sintéticos (CSV) que se cargan a SQLite
+│       │   └── res/                      Logo, foto de fondo e íconos
+│       └── test/                         Pruebas JVM (detector, decisión humana, retención, agenda)
+├── docs/
+│   ├── entregables/                      Declaración de transparencia, guion del pitch, preguntas del jurado
+│   ├── presentacion/                     Presentación del pitch (PowerPoint)
+│   ├── diseno_stitch/                    Diseño de pantallas generado en Stitch (referencia)
+│   └── prototipo_web_python/             Prototipo web previo (Python) y generador de datos sintéticos
+├── gradle/                               Versiones y wrapper de Gradle
+├── CLAUDE.md                             Registro de decisiones del proyecto
+└── README.md
 ```
 
 ## Documentos del equipo
 
-- [Declaración de transparencia](entregables/1_DECLARACION_DE_TRANSPARENCIA.md)
-- [Guion del pitch (5 minutos)](entregables/2_GUION_PITCH_5_MINUTOS.md)
-- [Preguntas críticas del jurado](entregables/3_PREGUNTAS_DEL_JURADO.md)
+- [Declaración de transparencia](docs/entregables/1_DECLARACION_DE_TRANSPARENCIA.md)
+- [Guion del pitch (5 minutos)](docs/entregables/2_GUION_PITCH_5_MINUTOS.md)
+- [Preguntas críticas del jurado](docs/entregables/3_PREGUNTAS_DEL_JURADO.md)
 - [Registro de decisiones y arquitectura (`CLAUDE.md`)](CLAUDE.md)
 
 ## Próximos pasos
@@ -125,7 +153,7 @@ Un **piloto pequeño con una organización socia** (por ejemplo, Fundación La R
 
 ## Uso de herramientas de IA
 
-El código, el diseño y los documentos se desarrollaron con apoyo de **Claude (Anthropic) mediante Claude Code** y **Google Stitch**, bajo decisión y revisión del equipo. Detalle en la [declaración de transparencia](entregables/1_DECLARACION_DE_TRANSPARENCIA.md).
+El código, el diseño y los documentos se desarrollaron con apoyo de **Claude (Anthropic) mediante Claude Code** y **Google Stitch**, bajo decisión y revisión del equipo. Detalle en la [declaración de transparencia](docs/entregables/1_DECLARACION_DE_TRANSPARENCIA.md).
 
 ---
 *Equipo 19 · Hackathon IA Aplicada UC · Duoc UC 2026. Prototipo con fines académicos. La licencia del código debe definirla el equipo.*

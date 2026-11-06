@@ -1,4 +1,4 @@
-package com.example.cuidadoyvirtudapp.ui
+package com.example.cuidadoyvirtudapp.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas

@@ -39,6 +39,23 @@ object Social {
     }
 
     /**
+     * Recorridos de seguimiento: lo que la persona elige tras ciertas respuestas. Devuelve la nota (codificada, sin texto libre)
+     * que se anota para su cuidador, o null si no corresponde anotar nada ("no, gracias") o si la acción es otra
+     * (pedir una llamada o conocer a otra persona).
+     */
+    fun categoriaSeguimiento(clave: String, valor: String): String? = when ("$clave/$valor") {
+        "contacto/familia" -> "Quiere hablar con su familia"
+        "actividades/compras" -> "Necesita ayuda con las compras"
+        "actividades/comida" -> "Necesita ayuda con la comida"
+        "actividades/aseo" -> "Necesita ayuda con el aseo"
+        "actividades/moverse" -> "Necesita ayuda para moverse o hacer trámites"
+        "medicacion/olvido" -> "Remedios: se le olvidó"
+        "medicacion/sin_remedios" -> "Remedios: no le quedan"
+        "medicacion/me_caen_mal" -> "Remedios: le caen mal"
+        else -> null
+    }
+
+    /**
      * Elige a quién sugerir. Solo entre quienes YA aceptaron conocer a otras personas y hoy también quieren compañía
      * (esa preselección la hace quien llama). Se prefiere la misma zona (para que puedan encontrarse); desempate estable por id.
      */
